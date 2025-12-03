@@ -3,6 +3,13 @@ using System.Xml.Linq;
 
 namespace SnapshotManager.core
 {
+    /// <summary>
+    /// Represents a snapshot of data of a specified type, including metadata such as timestamp, name, and description.
+    /// </summary>
+    /// <remarks>Use this class to capture and store the state of an object or value at a specific point in
+    /// time, along with descriptive metadata. The snapshot is immutable after creation, except for the metadata
+    /// properties, which can be modified if needed.</remarks>
+    /// <typeparam name="T">The type of data contained in the snapshot.</typeparam>
     public class Snapshot<T>
     {
         public DateTime TimeStamp { get; set; } = DateTime.Now;

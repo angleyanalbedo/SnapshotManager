@@ -204,9 +204,9 @@ namespace SnapshotManager.core
         }
     }
 
-    public static class ElementArrayDiff
+    public class ElementArrayDiff : IDiff<List<List<ElementBase>>>
     {
-        public static DiffNode Diff(
+        public DiffNode Diff(
             List<List<ElementBase>> oldArr,
             List<List<ElementBase>> newArr)
         {
