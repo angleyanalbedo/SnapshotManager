@@ -122,6 +122,25 @@ namespace SnapshotManager.core
         }
     }
 
+    public abstract class ElemnentDiffBase<T> :IDiff<T>
+    {
+        public abstract DiffNode Diff(T oldValue, T newValue);
+        protected void AddIfDifferent(DiffNode node, string name, object a, object b)
+        {
+            if (!Equals(a, b))
+            {
+                var child = new DiffNode
+                {
+                    Name = name,
+                    Type = DiffType.Modified,
+                    OldValue = a,
+                    NewValue = b
+                };
+                node.Children.Add(child);
+            }
+        }
+    }
+
     public abstract class Diff<T> : ICompare<T>
     {
         public abstract DiffResult Compare(T oldValue, T newValue);
@@ -204,9 +223,47 @@ namespace SnapshotManager.core
         }
     }
 
-    public class ElementArrayDiff : IDiff<List<List<ElementBase>>>
+
+    public class ElementListDiff : ElemnentDiffBase<List<ElementBase>>
     {
-        public DiffNode Diff(
+        public override DiffNode Diff(
+            List<ElementBase> oldList,
+            List<ElementBase> newList)
+        {
+            var root = new DiffNode { Name = "ElementList" };
+            int max = Math.Max(oldList.Count, newList.Count);
+            for (int i = 0; i < max; i++)
+            {
+                if (i >= oldList.Count)
+                {
+                    root.Children.Add(new DiffNode
+                    {
+                        Name = $"Index[{i}]",
+                        Type = DiffType.Added,
+                    });
+                    continue;
+                }
+                if (i >= newList.Count)
+                {
+                    root.Children.Add(new DiffNode
+                    {
+                        Name = $"Index[{i}]",
+                        Type = DiffType.Removed,
+                    });
+                    continue;
+                }
+                var itemNode = oldList[i].Diff(oldList[i],newList[i]);
+                itemNode.Name = $"Index[{i}]";
+                if (itemNode.HasDifference)
+                    root.Children.Add(itemNode);
+            }
+            return root;
+        }
+    }
+
+    public class ElementArrayDiff : ElemnentDiffBase<List<List<ElementBase>>>
+    {
+        public override DiffNode Diff(
             List<List<ElementBase>> oldArr,
             List<List<ElementBase>> newArr)
         {
