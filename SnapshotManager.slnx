@@ -1,4 +1,5 @@
 <Solution>
+  <Project Path="SimpleSnapManager/SimpleSnapManager.csproj" Id="eda8c28d-5c3d-41ce-926d-1233eb8faa4e" />
   <Project Path="SnapshotManager/SnapshotManager.csproj" />
   <Project Path="Test/Test.csproj" />
 </Solution>
