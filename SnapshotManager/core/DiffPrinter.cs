@@ -69,5 +69,26 @@ namespace SnapshotManager.core
             File.WriteAllText(_path, json);
         }
     }
+    public class MarkdownDiffPrinter : DiffPrinterBase
+    {
+        private readonly string _path;
+
+        public MarkdownDiffPrinter(string path) => _path = path;
+
+        public override void Print(DiffResult result)
+        {
+            using var writer = new StreamWriter(_path);
+
+            writer.WriteLine("# Diff Report\n");
+
+            foreach (var line in result.Items)
+                writer.WriteLine($"- `{line}`");
+        }
+
+        protected override void PrintLine(string line)
+        {
+            // 不使用
+        }
+    }
 
 }
