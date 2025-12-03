@@ -20,6 +20,7 @@ namespace SnapshotManager.core
         }
 
         public T GetData() => _snap;
+        public T Data { get => _snap; }
     }
     public class ListSnapshot<T> : Snapshot<List<T>>
     where T : IDeepCloneable<T>
@@ -62,6 +63,15 @@ namespace SnapshotManager.core
         }
     }
 
+
+    /// <summary>
+    /// Represents a snapshot of a two-dimensional array of elements, preserving the state of a collection of element
+    /// lists at a specific point in time.
+    /// </summary>
+    /// <remarks>Use this class to capture and work with the state of a two-dimensional collection of
+    /// elements, such as a grid or matrix, for undo/redo operations or historical analysis. The snapshot is a deep
+    /// clone of the original data, ensuring that changes to the source collection do not affect the stored
+    /// snapshot.</remarks>
     public class ElementArraySnapshot : Snapshot<List<List<ElementBase>>>
     {
         public ElementArraySnapshot(
