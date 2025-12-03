@@ -14,4 +14,14 @@ namespace SnapshotManager.core.@interface
         void Print(DiffNode result);
     }
 
+    public interface IDiffResultFormatter
+    {
+        string Format(DiffResult result);
+    }
+
+    public interface IDiffNodeFormatter
+    {
+        string Format(DiffNode result);
+    }
+
 }

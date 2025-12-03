@@ -1,9 +1,11 @@
 ﻿using SnapshotManager.core;
+using Xunit.Abstractions;
 
 namespace Test
 {
     public class UnitTest1
     {
+        private readonly ITestOutputHelper _output;
         public class MyElement : ElementBase
         {
             public string Name { get; set; }
@@ -17,6 +19,10 @@ namespace Test
                     Value = this.Value
                 };
             }
+        }
+        public UnitTest1(ITestOutputHelper output)
+        {
+            _output = output;
         }
         [Fact]
         public void Test1()
@@ -40,7 +46,8 @@ namespace Test
 
             // 对比快照
             var diff = manager.CompareSnapshots("s1", "s2");
-            Console.WriteLine(diff);
+            var printer = new StringDiffNodePrinter();
+            _output.WriteLine(printer.Format(diff));
 
 
         }

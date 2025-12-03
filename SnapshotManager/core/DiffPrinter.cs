@@ -152,4 +152,73 @@ namespace SnapshotManager.core
             };
     }
 
+    public class StringDiffNodePrinter : IDiffNodeFormatter
+    {
+        private readonly bool _useAnsiColor;
+
+        /// <summary>
+        /// </summary>
+        /// <param name="useAnsiColor">
+        /// true  – 返回 ANSI 彩色字符串，适合直接 Console.Write ；
+        /// false – 返回纯文本，适合断言或写日志。
+        /// </param>
+        public StringDiffNodePrinter(bool useAnsiColor = false)
+        {
+            _useAnsiColor = useAnsiColor;
+        }
+
+        public string Format(DiffNode diff)
+        {
+            var sb = new StringBuilder();
+            PrintNode(diff, 0, sb);
+            return sb.ToString();
+        }
+
+        private void PrintNode(DiffNode node, int indent, StringBuilder sb)
+        {
+            if (!node.HasDifference) return;
+
+            var ind = new string(' ', indent * 2);
+
+            // 节点行：Name [Type]
+            var header = $"{ind}{node.Name}  [{node.Type}]";
+            sb.AppendLine(Colorize(header, MapColor(node.Type)));
+
+            // 如果是 Modified，再输出 Old / New
+            if (node.Type == DiffType.Modified)
+            {
+                sb.AppendLine(Colorize($"{ind}  Old: {node.OldValue}", MapColor(DiffType.Removed)));
+                sb.AppendLine(Colorize($"{ind}  New: {node.NewValue}", MapColor(DiffType.Added)));
+            }
+
+            // 递归子节点
+            foreach (var child in node.Children)
+                PrintNode(child, indent + 1, sb);
+        }
+
+        // -------------- 颜色相关 --------------
+        private ConsoleColor MapColor(DiffType type) =>
+            type switch
+            {
+                DiffType.Added => ConsoleColor.Green,
+                DiffType.Removed => ConsoleColor.DarkRed,
+                DiffType.Modified => ConsoleColor.Yellow,
+                _ => ConsoleColor.Gray
+            };
+
+        private string Colorize(string text, ConsoleColor color)
+        {
+            if (!_useAnsiColor) return text;
+
+            string code = color switch
+            {
+                ConsoleColor.Green => "\x1b[32m",
+                ConsoleColor.DarkRed => "\x1b[31m",
+                ConsoleColor.Yellow => "\x1b[33m",
+                _ => "\x1b[37m"
+            };
+            return $"{code}{text}\x1b[0m";
+        }
+    }
+
 }
