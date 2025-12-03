@@ -9,4 +9,9 @@ namespace SnapshotManager.core.@interface
         void Print(DiffResult result);
     }
 
+    public interface IDiffNodePrinter
+    {
+        void Print(DiffNode result);
+    }
+
 }

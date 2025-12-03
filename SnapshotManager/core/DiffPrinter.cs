@@ -24,7 +24,7 @@ namespace SnapshotManager.core
         {
             foreach (var item in result.Items)
             {
-                PrintLine(FormatLine(item));
+                PrintLine(FormatLine(item.ToString()));
             }
         }
 
@@ -45,6 +45,29 @@ namespace SnapshotManager.core
             Console.WriteLine(line.Substring(2)); // 去掉父类前缀“Δ ”
 
             Console.ResetColor();
+        }
+        public override void Print(DiffResult result)
+        {
+            foreach (var item in result.Items)
+            {
+                Console.ForegroundColor = item.Kind switch
+                {
+                    DiffKind.Added => ConsoleColor.Green,
+                    DiffKind.Removed => ConsoleColor.Red,
+                    DiffKind.Modified => ConsoleColor.Yellow,
+                    _ => ConsoleColor.White
+                };
+
+                Console.Write($"{item.Kind,-8}");
+
+                Console.ForegroundColor = ConsoleColor.Cyan;
+                Console.Write($"{item.Path,-20}");
+
+                Console.ForegroundColor = ConsoleColor.White;
+                Console.WriteLine($"{item.OldValue} → {item.NewValue}");
+
+                Console.ResetColor();
+            }
         }
     }
 
@@ -89,6 +112,44 @@ namespace SnapshotManager.core
         {
             // 不使用
         }
+    }
+
+    public class ConsoleDiffNodePrinter : IDiffNodePrinter
+    {
+        public void Print(DiffNode diff)
+        {
+            PrintNode(diff, 0);
+        }
+
+        private void PrintNode(DiffNode node, int indent)
+        {
+            if (!node.HasDifference)
+                return;
+
+            Console.ForegroundColor = GetColor(node.Type);
+
+            Console.WriteLine($"{new string(' ', indent * 2)}{node.Name}  [{node.Type}]");
+
+            if (node.Type == DiffType.Modified)
+            {
+                Console.WriteLine($"{new string(' ', indent * 2 + 2)}Old: {node.OldValue}");
+                Console.WriteLine($"{new string(' ', indent * 2 + 2)}New: {node.NewValue}");
+            }
+
+            Console.ResetColor();
+
+            foreach (var child in node.Children)
+                PrintNode(child, indent + 1);
+        }
+
+        private ConsoleColor GetColor(DiffType type) =>
+            type switch
+            {
+                DiffType.Added => ConsoleColor.Green,
+                DiffType.Removed => ConsoleColor.DarkRed,
+                DiffType.Modified => ConsoleColor.Yellow,
+                _ => ConsoleColor.Gray
+            };
     }
 
 }

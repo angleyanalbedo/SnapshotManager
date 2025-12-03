@@ -62,4 +62,21 @@ namespace SnapshotManager.core
         }
     }
 
+    public class ElementArraySnapshot : Snapshot<List<List<ElementBase>>>
+    {
+        public ElementArraySnapshot(
+            string name,
+            string description,
+            List<List<ElementBase>> src)
+            : base(name, description, DeepClone2D(src))
+        { }
+
+        private static List<List<ElementBase>> DeepClone2D(List<List<ElementBase>> src)
+        {
+            return src.Select(
+                row => row.Select(e => e?.DeepClone()).ToList()
+            ).ToList();
+        }
+    }
+
 }
