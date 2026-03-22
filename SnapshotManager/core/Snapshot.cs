@@ -1,4 +1,7 @@
-﻿using SnapshotManager.core.@interface;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using SnapshotManager.core.@interface;
 using System.Xml.Linq;
 
 namespace SnapshotManager.core
