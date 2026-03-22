@@ -7,7 +7,7 @@
     <LangVersion>9.0</LangVersion>
 
     <!-- NuGet Package Metadata -->
-    <Version>1.1.0</Version>
+    <Version>1.1.1</Version>
     <Authors>Ranni</Authors>
     <Description>一套通用的可回滚、可比较的快照组件，用于保存对象状态、生成差异（Diff），并支持高维数组、复杂对象结构。</Description>
     <Copyright>Copyright (c) Ranni 2026</Copyright>
