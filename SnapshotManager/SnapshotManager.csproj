@@ -5,6 +5,23 @@
     <ImplicitUsings>disable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <LangVersion>9.0</LangVersion>
+
+    <!-- NuGet Package Metadata -->
+    <Version>1.1.0</Version>
+    <Authors>Ranni</Authors>
+    <Description>一套通用的可回滚、可比较的快照组件，用于保存对象状态、生成差异（Diff），并支持高维数组、复杂对象结构。</Description>
+    <Copyright>Copyright (c) Ranni 2026</Copyright>
+    <PackageProjectUrl>https://github.com/your-username/SnapshotManager</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/your-username/SnapshotManager.git</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>snapshot, diff, undo, redo, versioning, history, state-management</PackageTags>
+    <PackageReleaseNotes>
+- Feat: 新增对多个 .NET 框架 (net9.0, net8.0, net472) 的支持。
+- Fix: 解决了各种编译错误和可空引用类型警告。
+- Build: 将项目文件升级到现代 SDK 风格并改进了包元数据。
+    </PackageReleaseNotes>
+    <PackageIcon>icon.png</PackageIcon>
+
 	<PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
 	<PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
@@ -14,6 +31,7 @@
   <ItemGroup>
       <None Include="../LICENSE.txt" Pack="true" PackagePath="\" />
       <None Include="../README.md" Pack="true" PackagePath="\" />
+      <None Include="icon.png" Pack="true" PackagePath="\" />
   </ItemGroup>
 
 </Project>
