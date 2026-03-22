@@ -52,12 +52,12 @@ namespace SnapshotManager.core
         /// <summary>
         /// 旧值
         /// </summary>
-        public object OldValue { get; set; }
+        public object? OldValue { get; set; }
 
         /// <summary>
         /// 新值
         /// </summary>
-        public object NewValue { get; set; }
+        public object? NewValue { get; set; }
 
         /// <summary>
         /// 额外数据（可扩展，有些场景非常有用）
@@ -89,7 +89,7 @@ namespace SnapshotManager.core
             Items.Add(item);
         }
 
-        public void Add(DiffKind kind, string path, object oldValue, object newValue)
+        public void Add(DiffKind kind, string path, object? oldValue, object? newValue)
         {
             Items.Add(new DiffItem()
             {
@@ -114,9 +114,9 @@ namespace SnapshotManager.core
 
     public abstract class DiffBase<T> : ICompare<T>
     {
-        public abstract DiffResult Compare(T oldValue, T newValue);
+        public abstract DiffResult Compare(T? oldValue, T? newValue);
 
-        protected void AddIfDifferent(DiffResult result, string name, object a, object b)
+        protected void AddIfDifferent(DiffResult result, string name, object? a, object? b)
         {
             if (!Equals(a, b))
                 result.Add($"{name}: {a} → {b}");
@@ -125,8 +125,8 @@ namespace SnapshotManager.core
 
     public abstract class ElemnentDiffBase<T> :IDiff<T>
     {
-        public abstract DiffNode Diff(T oldValue, T newValue);
-        protected void AddIfDifferent(DiffNode node, string name, object a, object b)
+        public abstract DiffNode Diff(T? oldValue, T? newValue);
+        protected void AddIfDifferent(DiffNode node, string name, object? a, object? b)
         {
             if (!Equals(a, b))
             {
@@ -144,9 +144,9 @@ namespace SnapshotManager.core
 
     public abstract class Diff<T> : ICompare<T>
     {
-        public abstract DiffResult Compare(T oldValue, T newValue);
+        public abstract DiffResult Compare(T? oldValue, T? newValue);
 
-        protected void AddIfDifferent(DiffResult result, string name, object a, object b)
+        protected void AddIfDifferent(DiffResult result, string name, object? a, object? b)
         {
             if (!Equals(a, b))
                 result.Add($"{name}: {a} → {b}");
@@ -162,16 +162,18 @@ namespace SnapshotManager.core
             _elementDiff = elementDiff;
         }
 
-        public override DiffResult Compare(List<T> oldList, List<T> newList)
+        public override DiffResult Compare(List<T>? oldList, List<T>? newList)
         {
             var result = new DiffResult();
+            oldList ??= new List<T>();
+            newList ??= new List<T>();
 
             int max = Math.Max(oldList.Count, newList.Count);
 
             for (int i = 0; i < max; i++)
             {
-                T oldItem = i < oldList.Count ? oldList[i] : default;
-                T newItem = i < newList.Count ? newList[i] : default;
+                T? oldItem = i < oldList.Count ? oldList[i] : default;
+                T? newItem = i < newList.Count ? newList[i] : default;
 
                 var r = _elementDiff.Compare(oldItem, newItem);
                 foreach (var item in r.Items)
@@ -190,29 +192,36 @@ namespace SnapshotManager.core
             _elementDiff = elementDiff;
         }
 
-        public override DiffResult Compare(List<List<T>> oldMatrix, List<List<T>> newMatrix)
+        public override DiffResult Compare(List<List<T>>? oldMatrix, List<List<T>>? newMatrix)
         {
             var result = new DiffResult();
+            oldMatrix ??= new List<List<T>>();
+            newMatrix ??= new List<List<T>>();
 
             int maxRows = Math.Max(oldMatrix.Count, newMatrix.Count);
 
             for (int i = 0; i < maxRows; i++)
             {
-                var rowA = i < oldMatrix.Count ? oldMatrix[i] : null;
-                var rowB = i < newMatrix.Count ? newMatrix[i] : null;
-
-                if (rowA == null || rowB == null)
+                if (i >= oldMatrix.Count)
                 {
-                    result.Add($"Row {i}: Added/Removed");
+                    result.Add($"Row {i}: Added");
                     continue;
                 }
+                if (i >= newMatrix.Count)
+                {
+                    result.Add($"Row {i}: Removed");
+                    continue;
+                }
+                
+                var rowA = oldMatrix[i];
+                var rowB = newMatrix[i];
 
                 int maxCols = Math.Max(rowA.Count, rowB.Count);
 
                 for (int j = 0; j < maxCols; j++)
                 {
-                    var a = j < rowA.Count ? rowA[j] : default;
-                    var b = j < rowB.Count ? rowB[j] : default;
+                    T? a = j < rowA.Count ? rowA[j] : default;
+                    T? b = j < rowB.Count ? rowB[j] : default;
 
                     var r = _elementDiff.Compare(a, b);
                     foreach (var item in r.Items)
@@ -228,32 +237,21 @@ namespace SnapshotManager.core
     public class ElementListDiff : ElemnentDiffBase<List<ElementBase>>
     {
         public override DiffNode Diff(
-            List<ElementBase> oldList,
-            List<ElementBase> newList)
+            List<ElementBase>? oldList,
+            List<ElementBase>? newList)
         {
             var root = new DiffNode { Name = "ElementList" };
+            oldList ??= new List<ElementBase>();
+            newList ??= new List<ElementBase>();
             int max = Math.Max(oldList.Count, newList.Count);
             for (int i = 0; i < max; i++)
             {
-                if (i >= oldList.Count)
-                {
-                    root.Children.Add(new DiffNode
-                    {
-                        Name = $"Index[{i}]",
-                        Type = DiffType.Added,
-                    });
-                    continue;
-                }
-                if (i >= newList.Count)
-                {
-                    root.Children.Add(new DiffNode
-                    {
-                        Name = $"Index[{i}]",
-                        Type = DiffType.Removed,
-                    });
-                    continue;
-                }
-                var itemNode = oldList[i].Diff(oldList[i],newList[i]);
+                ElementBase? oldItem = i < oldList.Count ? oldList[i] : null;
+                ElementBase? newItem = i < newList.Count ? newList[i] : null;
+
+                if (oldItem == null && newItem == null) continue;
+
+                var itemNode = (oldItem ?? newItem)!.Diff(oldItem, newItem);
                 itemNode.Name = $"Index[{i}]";
                 if (itemNode.HasDifference)
                     root.Children.Add(itemNode);
@@ -265,10 +263,12 @@ namespace SnapshotManager.core
     public class ElementArrayDiff : ElemnentDiffBase<List<List<ElementBase>>>
     {
         public override DiffNode Diff(
-            List<List<ElementBase>> oldArr,
-            List<List<ElementBase>> newArr)
+            List<List<ElementBase>>? oldArr,
+            List<List<ElementBase>>? newArr)
         {
             var root = new DiffNode { Name = "ElementArray" };
+            oldArr ??= new List<List<ElementBase>>();
+            newArr ??= new List<List<ElementBase>>();
 
             int maxRow = Math.Max(oldArr.Count, newArr.Count);
             for (int r = 0; r < maxRow; r++)
@@ -333,7 +333,12 @@ namespace SnapshotManager.core
                     continue;
                 }
 
-                var cellNode = oldRow[c].Diff(oldRow[c], newRow[c]);
+                ElementBase? oldCell = c < oldRow.Count ? oldRow[c] : null;
+                ElementBase? newCell = c < newRow.Count ? newRow[c] : null;
+
+                if (oldCell == null && newCell == null) continue;
+
+                var cellNode = (oldCell ?? newCell)!.Diff(oldCell, newCell);
                 cellNode.Name = $"Col[{c}]";
 
                 if (cellNode.HasDifference)

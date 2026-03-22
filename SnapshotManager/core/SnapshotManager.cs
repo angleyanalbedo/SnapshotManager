@@ -11,8 +11,8 @@ namespace SnapshotManager.core
         private readonly Dictionary<string, Snapshot<T>> _history =
             new(StringComparer.OrdinalIgnoreCase);
 
-        private readonly Func<T, T, DiffNode> _diffFunc;
-        private readonly Func<T, T, DiffResult> _compareFunc;
+        private readonly Func<T?, T?, DiffNode>? _diffFunc;
+        private readonly Func<T?, T?, DiffResult>? _compareFunc;
 
         // 构造函数，自动适配 IDiff<T>
         public SnapshotManager()
@@ -28,12 +28,9 @@ namespace SnapshotManager.core
                     return ((IDiff<T>)diffObj).Diff(oldVal, newVal);
                 };
             }
-            else
-            {
-                throw new InvalidOperationException("T 必须实现 IDiff<T>");
-            }
+            // else _diffFunc remains null and will be checked on usage
         }
-        public SnapshotManager(Func<T, T, DiffNode> diffFunc)
+        public SnapshotManager(Func<T?, T?, DiffNode> diffFunc)
         {
             _diffFunc = diffFunc;
         }
@@ -74,6 +71,9 @@ namespace SnapshotManager.core
 
         public DiffNode Diff(string snapA, string snapB)
         {
+            if (_diffFunc is null)
+                throw new InvalidOperationException("Diff function is not configured for this manager.");
+
             var a = GetSnapshot(snapA).Data;
             var b = GetSnapshot(snapB).Data;
 
@@ -81,6 +81,9 @@ namespace SnapshotManager.core
         }
         public DiffNode CompareSnapshots(string oldKey, string newKey)
         {
+            if (_diffFunc is null)
+                throw new InvalidOperationException("Diff function is not configured for this manager.");
+
             if (!_history.TryGetValue(oldKey, out var oldSnap) ||
                 !_history.TryGetValue(newKey, out var newSnap))
             {

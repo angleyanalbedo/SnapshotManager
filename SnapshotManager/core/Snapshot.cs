@@ -94,7 +94,7 @@ namespace SnapshotManager.core
         private static List<List<ElementBase>> DeepClone2D(List<List<ElementBase>> src)
         {
             return src.Select(
-                row => row.Select(e => e?.DeepClone()).ToList()
+                row => row.Select(e => e.DeepClone()).ToList()
             ).ToList();
         }
     }

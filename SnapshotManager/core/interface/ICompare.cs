@@ -9,7 +9,7 @@ namespace SnapshotManager.core.@interface
         /// <summary>
         /// 对比两个对象，返回差异结果
         /// </summary>
-        DiffResult Compare(T oldValue, T newValue);
+        DiffResult Compare(T? oldValue, T? newValue);
 
     }
     /// <summary>
@@ -17,7 +17,7 @@ namespace SnapshotManager.core.@interface
     /// </summary>
     public interface IDiff<T>
     {
-        DiffNode Diff(T oldValue, T newValue);
+        DiffNode Diff(T? oldValue, T? newValue);
     }
 
 }

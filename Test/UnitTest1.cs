@@ -8,7 +8,7 @@ namespace Test
         private readonly ITestOutputHelper _output;
         public class MyElement : ElementBase
         {
-            public string Name { get; set; }
+            public string Name { get; set; } = "";
             public int Value { get; set; }
 
             public override ElementBase DeepClone()

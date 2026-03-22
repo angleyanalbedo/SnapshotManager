@@ -15,22 +15,29 @@ namespace SnapshotManager.core
         /// <summary>
         /// 自动反射比较（通用的字段级 Diff）
         /// </summary>
-        public virtual DiffNode Diff(ElementBase oldValue, ElementBase newValue)
+        public virtual DiffNode Diff(ElementBase? oldValue, ElementBase? newValue)
         {
             var node = new DiffNode
             {
-                Name = oldValue?.GetType().Name ?? "Element"
+                Name = oldValue?.GetType().Name ?? newValue?.GetType().Name ?? "Element"
             };
 
-            if (oldValue == null || newValue == null)
+            if (oldValue == null && newValue != null)
             {
-                node.Type = (oldValue == null && newValue != null) ? DiffType.Added :
-                            (oldValue != null && newValue == null) ? DiffType.Removed :
-                            DiffType.None;
+                node.Type = DiffType.Added;
+                return node;
+            }
+            if (oldValue != null && newValue == null)
+            {
+                node.Type = DiffType.Removed;
+                return node;
+            }
+            if (oldValue == null && newValue == null)
+            {
                 return node;
             }
 
-            foreach (var prop in oldValue.GetType().GetProperties()
+            foreach (var prop in oldValue!.GetType().GetProperties()
                                          .Where(p => p.CanRead))
             {
                 var oldVal = prop.GetValue(oldValue);
