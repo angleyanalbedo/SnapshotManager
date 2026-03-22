@@ -14,6 +14,8 @@ namespace SimpleSnapManager
 
     public class SnapshotManager
     {
+        private static readonly IReadOnlyDictionary<string, PropertyInfo> _elementProperties =
+            typeof(Element).GetProperties(BindingFlags.Public | BindingFlags.Instance).ToDictionary(p => p.Name);
         // =============================
         //  下面都是单文件内容，不依赖外部类
         // =============================
@@ -220,16 +222,16 @@ namespace SimpleSnapManager
         {
             var node = new DiffNode { Name = "Element" };
 
-            foreach (var f in typeof(Element).GetFields(BindingFlags.Public | BindingFlags.Instance))
+            foreach (var p in _elementProperties.Values)
             {
-                var ov = f.GetValue(oldE);
-                var nv = f.GetValue(newE);
+                var ov = p.GetValue(oldE);
+                var nv = p.GetValue(newE);
 
                 if (!Equals(ov, nv))
                 {
                     node.Children.Add(new DiffNode
                     {
-                        Name = f.Name,
+                        Name = p.Name,
                         Type = DiffType.Modified,
                         OldValue = ov,
                         NewValue = nv
@@ -289,8 +291,10 @@ namespace SimpleSnapManager
                     foreach (var fieldNode in colNode.Children)
                     {
                         var e = data[rowIndex][colIndex];
-                        var field = typeof(Element).GetField(fieldNode.Name);
-                        field.SetValue(e, fieldNode.NewValue);
+                        if (_elementProperties.TryGetValue(fieldNode.Name, out var prop))
+                        {
+                            prop.SetValue(e, fieldNode.NewValue);
+                        }
                     }
                 }
             }

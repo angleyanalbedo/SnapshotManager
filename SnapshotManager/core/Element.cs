@@ -1,5 +1,6 @@
 ﻿using SnapshotManager.core.@interface;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -9,6 +10,7 @@ namespace SnapshotManager.core
 {
     public abstract class ElementBase : IDeepCloneable<ElementBase>, IDiff<ElementBase>
     {
+        private static readonly ConcurrentDictionary<Type, PropertyInfo[]> _propertyCache = new();
 
         public abstract ElementBase DeepClone();
 
@@ -37,8 +39,11 @@ namespace SnapshotManager.core
                 return node;
             }
 
-            foreach (var prop in oldValue!.GetType().GetProperties()
-                                         .Where(p => p.CanRead))
+            var properties = _propertyCache.GetOrAdd(
+                oldValue!.GetType(),
+                t => t.GetProperties().Where(p => p.CanRead).ToArray());
+
+            foreach (var prop in properties)
             {
                 var oldVal = prop.GetValue(oldValue);
                 var newVal = prop.GetValue(newValue);
