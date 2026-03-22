@@ -9,7 +9,7 @@
 	<PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="System.Text.Json" Version="8.0.4" Condition="'$(TargetFramework)' == 'net472'" />
+    <PackageReference Include="System.Text.Json" Version="10.0.5" Condition="'$(TargetFramework)' == 'net472'" />
   </ItemGroup>
   <ItemGroup>
       <None Include="../LICENSE.txt" Pack="true" PackagePath="\" />
