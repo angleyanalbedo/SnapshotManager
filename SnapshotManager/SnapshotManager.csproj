@@ -7,7 +7,7 @@
     <LangVersion>9.0</LangVersion>
 
     <!-- NuGet Package Metadata -->
-    <Version>1.2.0</Version>
+    <Version>1.2.1</Version>
     <Authors>Ranni</Authors>
     <Description>一套通用的可回滚、可比较的快照组件，用于保存对象状态、生成差异（Diff），并支持高维数组、复杂对象结构。</Description>
     <Copyright>Copyright (c) Ranni 2026</Copyright>
@@ -16,10 +16,10 @@
     <RepositoryType>git</RepositoryType>
     <PackageTags>snapshot, diff, undo, redo, versioning, history, state-management</PackageTags>
     <PackageReleaseNotes>
-- Feat: 新增对 HashSet&lt;T&gt; 容器的支持，包括快照管理和差异对比。
-- Docs: 新增详细的使用指南、架构文档和 API 参考文档。
-- Fix: 修复了多处编译警告（空引用、泛型约束、XML注释）。
-- Refactor: 优化了泛型约束，确保类型安全。
+- Feat: 新增可视化输出支持，包括 Graphviz (DOT) 和 Mermaid 流程图格式化器。
+- Feat: 新增快照打印功能 (ISnapshotPrinter)，支持控制台和字符串输出。
+- Docs: 完善了输出与格式化相关的文档和示例。
+- Tests: 增加了针对打印器和格式化器的单元测试。
     </PackageReleaseNotes>
 
 	<PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
