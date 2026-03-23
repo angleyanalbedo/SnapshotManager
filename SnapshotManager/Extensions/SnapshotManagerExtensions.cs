@@ -1,5 +1,5 @@
-using SnapshotManager.core;
-using SnapshotManager.core.@interface;
+using SnapshotManager.Abstruactions;
+using SnapshotManager.Core;
 
 namespace SnapshotManager.Extensions
 {
