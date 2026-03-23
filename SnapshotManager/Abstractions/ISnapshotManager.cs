@@ -10,21 +10,23 @@ namespace SnapshotManager.Abstruactions
     /// 快照管理器接口。
     /// 定义了快照的存储、检索以及差异对比的核心功能。
     /// </summary>
-    /// <typeparam name="T">被管理的数据类型。</typeparam>
-    public interface ISnapshotManager<T>
+    /// <typeparam name="TSnapshot">具体的快照类型。</typeparam>
+    /// <typeparam name="TModel">被管理的数据模型类型。</typeparam>
+    public interface ISnapshotManager<TSnapshot, TModel>
+        where TSnapshot : Snapshot<TModel>
     {
         /// <summary>
         /// 添加一个已构建的快照对象。
         /// </summary>
         /// <param name="snapshot">快照实例。</param>
-        void AddSnapshot(Snapshot<T> snapshot);
+        void AddSnapshot(TSnapshot snapshot);
         
         /// <summary>
         /// 添加一个快照对象，并指定存储的键名。
         /// </summary>
         /// <param name="key">用于检索快照的唯一键。</param>
         /// <param name="snapshot">快照实例。</param>
-        void AddSnapshot(string key, Snapshot<T> snapshot);
+        void AddSnapshot(string key, TSnapshot snapshot);
 
         /// <summary>
         /// [快捷方法] 直接对当前数据创建快照。
@@ -32,14 +34,14 @@ namespace SnapshotManager.Abstruactions
         /// </summary>
         /// <param name="data">当前数据（将自动进行深拷贝）。</param>
         /// <returns>生成的快照键名。</returns>
-        string TakeSnapshot(T data);
+        string TakeSnapshot(TModel data);
 
         /// <summary>
         /// [快捷方法] 直接对当前数据创建快照，并指定键名。
         /// </summary>
         /// <param name="key">快照键名。</param>
         /// <param name="data">当前数据（将自动进行深拷贝）。</param>
-        void TakeSnapshot(string key, T data);
+        void TakeSnapshot(string key, TModel data);
 
         /// <summary>
         /// 根据键名获取快照。
@@ -47,13 +49,13 @@ namespace SnapshotManager.Abstruactions
         /// <param name="name">快照键名。</param>
         /// <returns>快照实例。</returns>
         /// <exception cref="KeyNotFoundException">当指定键名的快照不存在时抛出。</exception>
-        Snapshot<T> GetSnapshot(string name);
+        TSnapshot GetSnapshot(string name);
 
         /// <summary>
         /// 列出所有已存储的快照，按时间戳排序。
         /// </summary>
         /// <returns>快照列表。</returns>
-        IEnumerable<Snapshot<T>> ListSnapshots();
+        IEnumerable<TSnapshot> ListSnapshots();
 
         /// <summary>
         /// 对比两个历史快照之间的差异。
@@ -70,7 +72,7 @@ namespace SnapshotManager.Abstruactions
         /// <param name="baseSnapKey">作为基准的历史快照键名。</param>
         /// <param name="currentData">当前的内存数据。</param>
         /// <returns>差异节点树。</returns>
-        DiffNode DiffWith(string baseSnapKey, T currentData);
+        DiffNode DiffWith(string baseSnapKey, TModel currentData);
     }
 
 }
