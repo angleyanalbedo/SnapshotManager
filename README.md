@@ -162,10 +162,3 @@ var myManager = new SnapshotManager<MyComplexData>(
 ```bash
 dotnet pack -c Release
 ```
-
-### 命令说明：
-*   `dotnet pack`: 执行打包操作。
-*   `-c Release`: 使用 `Release` 配置进行构建（优化代码，移除调试符号），这是发布正式包的标准做法。
-
-### 预期结果：
-命令执行成功后，你会在 `SnapshotManager\bin\Release\` 目录下看到生成的 `.nupkg` 文件（例如 `SnapshotManager.1.1.3.nupkg`）。你可以将该文件上传到 NuGet.org 或私有源。
