@@ -7,7 +7,7 @@
     <LangVersion>9.0</LangVersion>
 
     <!-- NuGet Package Metadata -->
-    <Version>1.1.3</Version>
+    <Version>1.2.0</Version>
     <Authors>Ranni</Authors>
     <Description>一套通用的可回滚、可比较的快照组件，用于保存对象状态、生成差异（Diff），并支持高维数组、复杂对象结构。</Description>
     <Copyright>Copyright (c) Ranni 2026</Copyright>
@@ -16,10 +16,10 @@
     <RepositoryType>git</RepositoryType>
     <PackageTags>snapshot, diff, undo, redo, versioning, history, state-management</PackageTags>
     <PackageReleaseNotes>
-- Feat: 新增 TakeSnapshot API，支持直接保存数据对象，无需手动创建 Snapshot 实例。
-- Feat: 新增 DiffWith API，支持将当前内存数据与历史快照直接对比，无需先保存快照。
-- Docs: 完善了核心接口的 XML 文档注释，提供更好的 IntelliSense 支持。
-- Docs: 重写 README，提供更清晰的实战引导。
+- Feat: 新增对 HashSet&lt;T&gt; 容器的支持，包括快照管理和差异对比。
+- Docs: 新增详细的使用指南、架构文档和 API 参考文档。
+- Fix: 修复了多处编译警告（空引用、泛型约束、XML注释）。
+- Refactor: 优化了泛型约束，确保类型安全。
     </PackageReleaseNotes>
 
 	<PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
