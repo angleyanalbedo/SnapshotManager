@@ -8,12 +8,6 @@ using System.Text;
 
 namespace SnapshotManager.core
 {
-    public enum DiffKind
-    {
-        Added,
-        Removed,
-        Modified
-    }
     /// <summary>
     /// 树状 Diff 结果
     /// </summary>
@@ -39,134 +33,19 @@ namespace SnapshotManager.core
         Modified
     }
 
-    public class DiffItem
+
+    public class ListDiff<T> : IDiff<List<T>>
     {
-        /// <summary>
-        /// 差异类型（新增、删除、修改）
-        /// </summary>
-        public DiffKind Kind { get; set; }
+        private readonly IDiff<T> _elementDiff;
 
-        /// <summary>
-        /// 差异的路径（如："Row[3].Column[2]" 或 "Element.Address"）
-        /// </summary>
-        public string Path { get; set; }
-
-        /// <summary>
-        /// 旧值
-        /// </summary>
-        public object? OldValue { get; set; }
-
-        /// <summary>
-        /// 新值
-        /// </summary>
-        public object? NewValue { get; set; }
-
-        /// <summary>
-        /// 额外数据（可扩展，有些场景非常有用）
-        /// </summary>
-        public Dictionary<string, object> Metadata { get; set; } = new();
-
-        public DiffItem()
-        {
-            Metadata = new Dictionary<string, object>();
-            Path = string.Empty;
-            Kind = DiffKind.Modified;
-            NewValue = null;
-            OldValue = null;
-        }
-        public override string ToString()
-        {
-            return $"{Kind} @ {Path}: {OldValue} → {NewValue}";
-        }
-    }
-
-    public class DiffResult
-    {
-        public bool HasDifference => Items.Count > 0;
-
-        public List<DiffItem> Items { get; } = new();
-
-        public void Add(DiffItem item)
-        {
-            Items.Add(item);
-        }
-
-        public void Add(DiffKind kind, string path, object? oldValue, object? newValue)
-        {
-            Items.Add(new DiffItem()
-            {
-                Kind = kind,
-                Path = path,
-                OldValue = oldValue,
-                NewValue = newValue
-            });
-        }
-
-        public void Add(string description)
-        {
-            Items.Add(new DiffItem()
-            {
-                Kind = DiffKind.Modified,
-                Path = "",
-                OldValue = null,
-                NewValue = description
-            });
-        }
-    }
-
-    public abstract class DiffBase<T> : ICompare<T>
-    {
-        public abstract DiffResult Compare(T? oldValue, T? newValue);
-
-        protected void AddIfDifferent(DiffResult result, string name, object? a, object? b)
-        {
-            if (!Equals(a, b))
-                result.Add($"{name}: {a} → {b}");
-        }
-    }
-
-    public abstract class ElemnentDiffBase<T> :IDiff<T>
-    {
-        public abstract DiffNode Diff(T? oldValue, T? newValue);
-        protected void AddIfDifferent(DiffNode node, string name, object? a, object? b)
-        {
-            if (!Equals(a, b))
-            {
-                var child = new DiffNode
-                {
-                    Name = name,
-                    Type = DiffType.Modified,
-                    OldValue = a,
-                    NewValue = b
-                };
-                node.Children.Add(child);
-            }
-        }
-    }
-
-    public abstract class Diff<T> : ICompare<T>
-    {
-        public abstract DiffResult Compare(T? oldValue, T? newValue);
-
-        protected void AddIfDifferent(DiffResult result, string name, object? a, object? b)
-        {
-            if (!Equals(a, b))
-                result.Add($"{name}: {a} → {b}");
-        }
-    }
-
-    public class ListDiff<T> : DiffBase<List<T>>
-    {
-        private readonly ICompare<T> _elementDiff;
-
-        public ListDiff(ICompare<T> elementDiff)
+        public ListDiff(IDiff<T> elementDiff)
         {
             _elementDiff = elementDiff;
         }
 
-        public override DiffResult Compare(List<T>? oldList, List<T>? newList)
+        public DiffNode Diff(List<T>? oldList, List<T>? newList)
         {
-            var result = new DiffResult();
+            var root = new DiffNode { Name = "List" };
             oldList ??= new List<T>();
             newList ??= new List<T>();
 
@@ -174,15 +53,33 @@ namespace SnapshotManager.core
 
             for (int i = 0; i < max; i++)
             {
-                T? oldItem = i < oldList.Count ? oldList[i] : default;
-                T? newItem = i < newList.Count ? newList[i] : default;
+                // 处理列表长度变化
+                if (i >= oldList.Count)
+                {
+                    root.Children.Add(new DiffNode { Name = $"Index[{i}]", Type = DiffType.Added, NewValue = newList[i] });
+                    continue;
+                }
+                if (i >= newList.Count)
+                {
+                    root.Children.Add(new DiffNode { Name = $"Index[{i}]", Type = DiffType.Removed, OldValue = oldList[i] });
+                    continue;
+                }
 
-                var r = _elementDiff.Compare(oldItem, newItem);
-                foreach (var item in r.Items)
-                    result.Add($"[Index {i}] {item}");
+                // 比较元素
+                T oldItem = oldList[i];
+                T newItem = newList[i];
+
+                var childNode = _elementDiff.Diff(oldItem, newItem);
+                
+                // 如果子节点有差异，加入树中
+                if (childNode.HasDifference)
+                {
+                    childNode.Name = $"Index[{i}]"; // 覆盖名称以显示索引
+                    root.Children.Add(childNode);
+                }
             }
 
-            return result;
+            return root;
         }
     }
     public class ElementDiff : IDiff<ElementBase>
@@ -239,170 +136,70 @@ namespace SnapshotManager.core
         }
     }
 
-    public class MatrixDiff<T> : DiffBase<List<List<T>>>
+    public class MatrixDiff<T> : IDiff<List<List<T>>>
     {
-        private readonly ICompare<T> _elementDiff;
+        private readonly IDiff<T> _elementDiff;
 
-        public MatrixDiff(ICompare<T> elementDiff)
+        public MatrixDiff(IDiff<T> elementDiff)
         {
             _elementDiff = elementDiff;
         }
 
-        public override DiffResult Compare(List<List<T>>? oldMatrix, List<List<T>>? newMatrix)
+        public DiffNode Diff(List<List<T>>? oldMatrix, List<List<T>>? newMatrix)
         {
-            var result = new DiffResult();
+            var root = new DiffNode { Name = "Matrix" };
             oldMatrix ??= new List<List<T>>();
             newMatrix ??= new List<List<T>>();
 
             int maxRows = Math.Max(oldMatrix.Count, newMatrix.Count);
 
-            for (int i = 0; i < maxRows; i++)
+            for (int r = 0; r < maxRows; r++)
             {
-                if (i >= oldMatrix.Count)
+                if (r >= oldMatrix.Count)
                 {
-                    result.Add($"Row {i}: Added");
+                    root.Children.Add(new DiffNode { Name = $"Row[{r}]", Type = DiffType.Added });
                     continue;
                 }
-                if (i >= newMatrix.Count)
+                if (r >= newMatrix.Count)
                 {
-                    result.Add($"Row {i}: Removed");
-                    continue;
-                }
-                
-                var rowA = oldMatrix[i];
-                var rowB = newMatrix[i];
-
-                int maxCols = Math.Max(rowA.Count, rowB.Count);
-
-                for (int j = 0; j < maxCols; j++)
-                {
-                    T? a = j < rowA.Count ? rowA[j] : default;
-                    T? b = j < rowB.Count ? rowB[j] : default;
-
-                    var r = _elementDiff.Compare(a, b);
-                    foreach (var item in r.Items)
-                        result.Add($"({i},{j}) {item}");
-                }
-            }
-
-            return result;
-        }
-    }
-
-
-    public class ElementListDiff : ElemnentDiffBase<List<ElementBase>>
-    {
-        private readonly IDiff<ElementBase> _elementDiff = new ElementDiff();
-        public override DiffNode Diff(
-            List<ElementBase>? oldList,
-            List<ElementBase>? newList)
-        {
-            var root = new DiffNode { Name = "ElementList" };
-            oldList ??= new List<ElementBase>();
-            newList ??= new List<ElementBase>();
-            int max = Math.Max(oldList.Count, newList.Count);
-            for (int i = 0; i < max; i++)
-            {
-                ElementBase? oldItem = i < oldList.Count ? oldList[i] : null;
-                ElementBase? newItem = i < newList.Count ? newList[i] : null;
-
-                if (oldItem == null && newItem == null) continue;
-
-                var itemNode = _elementDiff.Diff(oldItem, newItem);
-                itemNode.Name = $"Index[{i}]";
-                if (itemNode.HasDifference)
-                    root.Children.Add(itemNode);
-            }
-            return root;
-        }
-    }
-
-    public class ElementArrayDiff : ElemnentDiffBase<List<List<ElementBase>>>
-    {
-        private readonly IDiff<ElementBase> _elementDiff = new ElementDiff();
-        public override DiffNode Diff(
-            List<List<ElementBase>>? oldArr,
-            List<List<ElementBase>>? newArr)
-        {
-            var root = new DiffNode { Name = "ElementArray" };
-            oldArr ??= new List<List<ElementBase>>();
-            newArr ??= new List<List<ElementBase>>();
-
-            int maxRow = Math.Max(oldArr.Count, newArr.Count);
-            for (int r = 0; r < maxRow; r++)
-            {
-                if (r >= oldArr.Count)
-                {
-                    root.Children.Add(new DiffNode
-                    {
-                        Name = $"Row[{r}]",
-                        Type = DiffType.Added,
-                    });
+                    root.Children.Add(new DiffNode { Name = $"Row[{r}]", Type = DiffType.Removed });
                     continue;
                 }
 
-                if (r >= newArr.Count)
-                {
-                    root.Children.Add(new DiffNode
-                    {
-                        Name = $"Row[{r}]",
-                        Type = DiffType.Removed,
-                    });
-                    continue;
-                }
-
-                // 比较每行
-                var rowNode = DiffRow(oldArr[r], newArr[r], r);
+                var rowNode = DiffRow(oldMatrix[r], newMatrix[r], r);
                 if (rowNode.HasDifference)
+                {
                     root.Children.Add(rowNode);
+                }
             }
-
             return root;
         }
 
-        private DiffNode DiffRow(
-            List<ElementBase> oldRow,
-            List<ElementBase> newRow,
-            int rowIndex)
+        private DiffNode DiffRow(List<T> oldRow, List<T> newRow, int rowIndex)
         {
             var rowNode = new DiffNode { Name = $"Row[{rowIndex}]" };
+            int maxCols = Math.Max(oldRow.Count, newRow.Count);
 
-            int maxCol = Math.Max(oldRow.Count, newRow.Count);
-
-            for (int c = 0; c < maxCol; c++)
+            for (int c = 0; c < maxCols; c++)
             {
                 if (c >= oldRow.Count)
                 {
-                    rowNode.Children.Add(new DiffNode
-                    {
-                        Name = $"Col[{c}]",
-                        Type = DiffType.Added
-                    });
+                    rowNode.Children.Add(new DiffNode { Name = $"Col[{c}]", Type = DiffType.Added, NewValue = newRow[c] });
                     continue;
                 }
-
                 if (c >= newRow.Count)
                 {
-                    rowNode.Children.Add(new DiffNode
-                    {
-                        Name = $"Col[{c}]",
-                        Type = DiffType.Removed
-                    });
+                    rowNode.Children.Add(new DiffNode { Name = $"Col[{c}]", Type = DiffType.Removed, OldValue = oldRow[c] });
                     continue;
                 }
 
-                ElementBase? oldCell = c < oldRow.Count ? oldRow[c] : null;
-                ElementBase? newCell = c < newRow.Count ? newRow[c] : null;
-
-                if (oldCell == null && newCell == null) continue;
-
-                var cellNode = _elementDiff.Diff(oldCell, newCell);
-                cellNode.Name = $"Col[{c}]";
-
+                var cellNode = _elementDiff.Diff(oldRow[c], newRow[c]);
                 if (cellNode.HasDifference)
+                {
+                    cellNode.Name = $"Col[{c}]";
                     rowNode.Children.Add(cellNode);
+                }
             }
-
             return rowNode;
         }
     }
