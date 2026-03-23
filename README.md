@@ -5,100 +5,150 @@
 一个轻量级、泛型的 C# 快照管理与差异对比库。
 专为处理复杂数据结构（如列表、矩阵、自定义对象）的历史版本管理和差异分析而设计。
 
-## ✨ 特性
+---
 
-- **泛型支持**：支持任意实现了 `IDeepCloneable` 的数据类型。
-- **自动深拷贝**：快照存储时自动进行深拷贝，确保历史数据不被后续修改污染。
-- **差异对比 (Diff)**：内置 List、Matrix (二维数组) 和自定义对象的差异对比算法。
-- **灵活的 API**：支持直接存取数据对象，也支持精细控制快照对象。
-- **可视化输出**：支持将差异结果打印到控制台或格式化为字符串。
+## 📖 快速上手指南
 
-## 🚀 快速开始
+### 1. 第一步：定义你的数据类 (Element)
 
-### 1. 初始化管理器
-
-推荐使用工厂方法创建针对特定类型的管理器（例如针对 `ElementBase` 二维矩阵的管理器）：
+你的数据类必须继承 `ElementBase` 并实现 `DeepClone` 方法。这是为了确保快照存储的是数据的副本，而不是引用。
 
 ```csharp
 using SnapshotManager.core;
 
-// 使用工厂创建预配置好的管理器
-// 该管理器已内置了 MatrixDiff 和 ElementDiff 算法
+// 定义一个简单的业务对象
+public class MyData : ElementBase
+{
+    public int Id { get; set; }
+    public string Name { get; set; }
+    public double Score { get; set; }
+
+    // 必须实现：深拷贝逻辑
+    public override ElementBase DeepClone()
+    {
+        return new MyData 
+        { 
+            Id = this.Id, 
+            Name = this.Name, 
+            Score = this.Score 
+        };
+    }
+}
+```
+
+### 2. 第二步：初始化管理器
+
+我们提供了一个工厂方法，专门用于管理 `List<List<ElementBase>>` (二维矩阵) 类型的数据。
+
+```csharp
+using SnapshotManager.core;
+
+// 创建管理器实例
 var manager = ElementSnapshotManagerFactory.Create();
 ```
 
-### 2. 创建快照 (Take Snapshot)
+### 3. 第三步：创建快照 (Take Snapshot)
 
-无需手动创建 `Snapshot` 对象，直接将数据交给管理器即可：
+你不需要手动创建复杂的 Snapshot 对象，直接把你的数据扔给管理器即可。
 
 ```csharp
-var data = new List<List<ElementBase>> { /* ... 初始化数据 ... */ };
+// 1. 准备初始数据
+var data = new List<List<ElementBase>>
+{
+    new() { new MyData { Id = 1, Name = "Alice", Score = 80 } },
+    new() { new MyData { Id = 2, Name = "Bob", Score = 90 } }
+};
 
-// 方式 A: 自动生成 Key (使用时间戳，如 "20231027_103000_123")
-string key1 = manager.TakeSnapshot(data); 
-Console.WriteLine($"Snapshot taken: {key1}");
+// 2. 存快照 (方式 A：自动生成时间戳 Key)
+string v1Key = manager.TakeSnapshot(data); 
+Console.WriteLine($"已保存快照: {v1Key}");
 
-// 方式 B: 指定 Key
-manager.TakeSnapshot("v1.0", data);
+// 3. 存快照 (方式 B：指定自定义 Key)
+manager.TakeSnapshot("Version_1.0", data);
 ```
 
-### 3. 差异对比 (Diff)
+### 4. 第四步：修改数据并对比 (Diff)
 
-#### ⚡ 实时对比 (DiffWith)
-这是最常用的方式。你可以在修改数据后，直接与之前的快照进行对比，而**不需要**先把当前数据存为快照。
+这是最强大的功能。你可以修改内存中的数据，然后直接和之前的快照进行对比，查看发生了什么变化。
 
 ```csharp
-// 1. 修改内存中的数据
-data[0][0] = new MyElement(999);
+// 1. 修改数据：修改 Alice 的分数，删除 Bob
+((MyData)data[0][0]).Score = 95; 
+data.RemoveAt(1); 
 
-// 2. 直接对比 "v1.0" 快照与当前 data
-// 返回一个 DiffNode 树状结构
-var diffNode = manager.DiffWith("v1.0", data);
+// 2. 【实时对比】当前数据 vs "Version_1.0" 快照
+var diffNode = manager.DiffWith("Version_1.0", data);
 
-// 3. 打印差异
+// 3. 【历史对比】对比两个已存储的快照 (假设你存了 v1 和 v2)
+// var historyDiff = manager.Diff("Version_1.0", "Version_2.0");
+```
+
+### 5. 第五步：打印差异结果
+
+我们提供了打印机类，可以将复杂的 Diff 树状结构可视化输出。
+
+```csharp
+using SnapshotManager.core;
+
+// 1. 创建控制台打印机
 var printer = new ConsoleDiffPrinter();
+
+// 2. 打印结果
+// 绿色 = 新增, 红色 = 删除, 黄色 = 修改
 printer.Print(diffNode);
 ```
 
-#### 📜 历史对比 (Diff)
-对比两个已经存储的历史版本：
-
-```csharp
-manager.TakeSnapshot("v2.0", data);
-
-// 对比两个已存储的版本
-var diffNode = manager.Diff("v1.0", "v2.0");
+**输出示例：**
+```text
+ListDiff (Modified)
+  Row[0] (Modified)
+    Col[0] (Modified)
+      Score: 80 -> 95 (Modified)
+  Row[1] (Removed)
 ```
 
-## 🏗️ 核心架构
+---
 
-### SnapshotManager<T>
-核心控制器。负责存储快照历史、查找快照以及执行 Diff 操作。
-- `TakeSnapshot(T data)`: 快捷保存数据（自动深拷贝）。
-- `DiffWith(string key, T data)`: 快捷对比当前数据与历史快照。
+## 🛠️ 进阶：如何实现自定义 Diff 算法？
 
-### Snapshot<T>
-快照容器。
-- 确保存储的数据是原始数据的**深拷贝**。
-- 支持 `ListSnapshot`, `MatrixSnapshot` 等变体以优化特定结构的克隆性能。
+如果你不想用默认的反射对比，或者你的数据结构不是二维数组，你可以自定义 Diff 算法。
 
-### Diff 算法
-- `IDiff<T>`: 核心对比接口。
-- `ListDiff<T>`: 对比两个列表（检测增加、删除、修改）。
-- `MatrixDiff<T>`: 对比二维矩阵（检测行增删、单元格修改）。
-- `ElementDiff`: 对比自定义元素属性。
-
-## 🛠️ 扩展指南
-
-要支持自定义类型的快照管理：
-
-1. **实现接口**：数据类需实现 `IDeepCloneable<T>`。
-2. **定义 Diff**：实现 `IDiff<T>` 接口定义对比逻辑。
-3. **配置 Manager**：
+### 1. 实现 IDiff 接口
 
 ```csharp
-var myManager = new SnapshotManager<MyType>(
-    new MyTypeDiff(),            // Diff 算法
-    data => new MySnapshot(data) // 工厂委托：告诉 Manager 如何把数据包装成快照
+public class MyCustomDiff : IDiff<MyComplexData>
+{
+    public DiffNode Diff(MyComplexData? oldVal, MyComplexData? newVal)
+    {
+        var node = new DiffNode { Name = "MyData" };
+        
+        // 在这里写你的对比逻辑...
+        if (oldVal.Value != newVal.Value)
+        {
+            node.Type = DiffType.Modified;
+            node.OldValue = oldVal.Value;
+            node.NewValue = newVal.Value;
+        }
+        
+        return node;
+    }
+}
+```
+
+### 2. 组装 Manager
+
+```csharp
+var myManager = new SnapshotManager<MyComplexData>(
+    new MyCustomDiff(),            // 1. 你的 Diff 算法
+    (key, data) => new Snapshot<MyComplexData>(key, data) // 2. 告诉 Manager 如何包装快照
 );
 ```
+
+---
+
+## 🏗️ 核心概念
+
+*   **SnapshotManager**: 总管家。负责存取快照、执行 Diff。
+*   **Snapshot**: 数据的容器。它会在内部深拷贝一份数据，防止外部修改影响历史记录。
+*   **DiffNode**: 差异树节点。包含差异类型（Added/Removed/Modified）、旧值、新值以及子节点。
+*   **ElementBase**: 所有数据项的基类，强制要求实现深拷贝。
