@@ -3,11 +3,19 @@ using SnapshotManager.Core;
 
 namespace SnapshotManager.Extensions
 {
+    /// <summary>
+    /// 提供 ISnapshotManager 的扩展方法，用于简化 Diff 操作、打印和格式化输出。
+    /// </summary>
     public static class SnapshotManagerExtensions
     {
         /// <summary>
-        /// 比较两个快照并直接打印差异到控制台
+        /// 比较两个快照并直接打印差异到控制台。
         /// </summary>
+        /// <typeparam name="T">快照数据的类型。</typeparam>
+        /// <param name="manager">快照管理器实例。</param>
+        /// <param name="snapA">第一个快照的键（旧值）。</param>
+        /// <param name="snapB">第二个快照的键（新值）。</param>
+        /// <param name="printer">可选的差异打印器。如果为 null，默认使用 ConsoleDiffPrinter。</param>
         public static void DiffAndPrint<T>(this ISnapshotManager<T> manager, string snapA, string snapB, IDiffPrinter? printer = null)
         {
             var diffNode = manager.Diff(snapA, snapB);
@@ -16,8 +24,13 @@ namespace SnapshotManager.Extensions
         }
 
         /// <summary>
-        /// 比较基准快照与当前数据，并直接打印差异到控制台
+        /// 比较基准快照与当前数据，并直接打印差异到控制台。
         /// </summary>
+        /// <typeparam name="T">快照数据的类型。</typeparam>
+        /// <param name="manager">快照管理器实例。</param>
+        /// <param name="baseSnapKey">基准快照的键（旧值）。</param>
+        /// <param name="currentData">当前数据对象（新值）。</param>
+        /// <param name="printer">可选的差异打印器。如果为 null，默认使用 ConsoleDiffPrinter。</param>
         public static void DiffWithAndPrint<T>(this ISnapshotManager<T> manager, string baseSnapKey, T currentData, IDiffPrinter? printer = null)
         {
             var diffNode = manager.DiffWith(baseSnapKey, currentData);
@@ -26,8 +39,14 @@ namespace SnapshotManager.Extensions
         }
 
         /// <summary>
-        /// 比较两个快照并返回格式化后的差异字符串
+        /// 比较两个快照并返回格式化后的差异字符串。
         /// </summary>
+        /// <typeparam name="T">快照数据的类型。</typeparam>
+        /// <param name="manager">快照管理器实例。</param>
+        /// <param name="snapA">第一个快照的键（旧值）。</param>
+        /// <param name="snapB">第二个快照的键（新值）。</param>
+        /// <param name="formatter">可选的差异格式化器。如果为 null，默认使用 StringDiffFormatter。</param>
+        /// <returns>格式化后的差异字符串。</returns>
         public static string DiffAndFormat<T>(this ISnapshotManager<T> manager, string snapA, string snapB, IDiffFormatter? formatter = null)
         {
             var diffNode = manager.Diff(snapA, snapB);
@@ -36,8 +55,14 @@ namespace SnapshotManager.Extensions
         }
 
         /// <summary>
-        /// 比较基准快照与当前数据，并返回格式化后的差异字符串
+        /// 比较基准快照与当前数据，并返回格式化后的差异字符串。
         /// </summary>
+        /// <typeparam name="T">快照数据的类型。</typeparam>
+        /// <param name="manager">快照管理器实例。</param>
+        /// <param name="baseSnapKey">基准快照的键（旧值）。</param>
+        /// <param name="currentData">当前数据对象（新值）。</param>
+        /// <param name="formatter">可选的差异格式化器。如果为 null，默认使用 StringDiffFormatter。</param>
+        /// <returns>格式化后的差异字符串。</returns>
         public static string DiffWithAndFormat<T>(this ISnapshotManager<T> manager, string baseSnapKey, T currentData, IDiffFormatter? formatter = null)
         {
             var diffNode = manager.DiffWith(baseSnapKey, currentData);
