@@ -261,5 +261,93 @@ namespace SnapshotManager.Core
         }
     }
 
+    /// <summary>
+    /// 基础类型差异比较器（使用 Equals 比较）。
+    /// </summary>
+    /// <typeparam name="T">基础类型。</typeparam>
+    public class BasicDiff<T> : IDiff<T>
+    {
+        /// <inheritdoc />
+        public DiffNode Diff(T? oldValue, T? newValue)
+        {
+            var node = new DiffNode { Name = typeof(T).Name };
 
+            if (!EqualityComparer<T>.Default.Equals(oldValue, newValue))
+            {
+                node.Type = DiffType.Modified;
+                node.OldValue = oldValue;
+                node.NewValue = newValue;
+            }
+
+            return node;
+        }
+    }
+
+    /// <summary>
+    /// 字典差异比较器。
+    /// </summary>
+    /// <typeparam name="K">键类型。</typeparam>
+    /// <typeparam name="V">值类型。</typeparam>
+    public class DictionaryDiff<K, V> : IDiff<Dictionary<K, V>>
+    {
+        private readonly IDiff<V> _valueDiff;
+
+        /// <summary>
+        /// 初始化字典差异比较器。
+        /// </summary>
+        /// <param name="valueDiff">值比较器。</param>
+        public DictionaryDiff(IDiff<V> valueDiff)
+        {
+            _valueDiff = valueDiff;
+        }
+
+        /// <inheritdoc />
+        public DiffNode Diff(Dictionary<K, V>? oldDict, Dictionary<K, V>? newDict)
+        {
+            var root = new DiffNode { Name = "Dictionary" };
+            oldDict ??= new Dictionary<K, V>();
+            newDict ??= new Dictionary<K, V>();
+
+            // 获取所有键的并集
+            var allKeys = oldDict.Keys.Union(newDict.Keys);
+
+            foreach (var key in allKeys)
+            {
+                var keyStr = key?.ToString() ?? "null";
+                bool inOld = oldDict.ContainsKey(key!);
+                bool inNew = newDict.ContainsKey(key!);
+
+                if (!inOld && inNew)
+                {
+                    root.Children.Add(new DiffNode
+                    {
+                        Name = $"Key[{keyStr}]",
+                        Type = DiffType.Added,
+                        NewValue = newDict[key!]
+                    });
+                }
+                else if (inOld && !inNew)
+                {
+                    root.Children.Add(new DiffNode
+                    {
+                        Name = $"Key[{keyStr}]",
+                        Type = DiffType.Removed,
+                        OldValue = oldDict[key!]
+                    });
+                }
+                else
+                {
+                    // 比较值
+                    var valNode = _valueDiff.Diff(oldDict[key!], newDict[key!]);
+                    if (valNode.HasDifference)
+                    {
+                        valNode.Name = $"Key[{keyStr}]";
+                        root.Children.Add(valNode);
+                    }
+                }
+            }
+
+            return root;
+        }
+    }
 }

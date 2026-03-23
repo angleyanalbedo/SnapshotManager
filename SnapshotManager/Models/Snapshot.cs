@@ -164,4 +164,42 @@ namespace SnapshotManager.Models
             return result;
         }
     }
+
+    /// <summary>
+    /// 针对基础类型（int, string, bool 等）列表的快照实现。
+    /// 适用于不需要复杂 DeepClone 的场景。
+    /// </summary>
+    /// <typeparam name="T">基础数据类型。</typeparam>
+    public class PrimitiveListSnapshot<T> : Snapshot<List<T>>
+    {
+        /// <summary>
+        /// 创建基础类型列表快照。
+        /// </summary>
+        /// <param name="name">快照名称。</param>
+        /// <param name="description">快照描述。</param>
+        /// <param name="source">源列表数据。</param>
+        public PrimitiveListSnapshot(string name, string description, List<T> source)
+            : base(name, description, source != null ? new List<T>(source) : new List<T>())
+        {
+        }
+    }
+
+    /// <summary>
+    /// 针对字典类型的快照实现。
+    /// </summary>
+    /// <typeparam name="K">键类型。</typeparam>
+    /// <typeparam name="V">值类型。</typeparam>
+    public class DictionarySnapshot<K, V> : Snapshot<Dictionary<K, V>>
+    {
+        /// <summary>
+        /// 创建字典快照。
+        /// </summary>
+        /// <param name="name">快照名称。</param>
+        /// <param name="description">快照描述。</param>
+        /// <param name="source">源字典数据。</param>
+        public DictionarySnapshot(string name, string description, Dictionary<K, V> source)
+            : base(name, description, source != null ? new Dictionary<K, V>(source) : new Dictionary<K, V>())
+        {
+        }
+    }
 }
