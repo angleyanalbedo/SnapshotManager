@@ -7,4 +7,7 @@
   <ItemGroup>
     <PackageReference Include="System.Text.Json" Version="10.0.5" Condition="'$(TargetFramework)' != 'net45'" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\SnapshotManager\SnapshotManager.csproj" />
+  </ItemGroup>
 </Project>

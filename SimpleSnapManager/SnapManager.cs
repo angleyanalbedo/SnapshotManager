@@ -13,86 +13,154 @@ namespace SimpleSnapManager
 #if !NET45
     using System.Text.Json;
 #endif
+    using Core = SnapshotManager.core;
 
     public class SnapshotManager
     {
-        private static readonly IReadOnlyDictionary<string, PropertyInfo> _elementProperties =
-            typeof(Element).GetProperties(BindingFlags.Public | BindingFlags.Instance).ToDictionary(p => p.Name);
         // =============================
         //  下面都是单文件内容，不依赖外部类
         // =============================
 
-        private List<Snapshot> _history = new();
+        private readonly Core.SnapshotManager<List<List<Core.ElementBase>>> _manager =
+            new Core.SnapshotManager<List<List<Core.ElementBase>>>(new Core.ElementArrayDiff());
+        private readonly List<string> _snapshotKeys = new List<string>();
 
-        // 添加快照（自动选择：完整快照 or 增量快照）
+        // 添加快照（重写实现）
         public void AddSnapshot(string name, List<List<Element>> data)
         {
-            if (_history.Count == 0)
-            {
-                _history.Add(Snapshot.CreateFull(name, data));
-                return;
-            }
-
-            var last = _history.Last();
-            var diff = DiffArrays(last.Data, data);
-
-            if (!diff.HasDifference)
-            {
-                Console.WriteLine("没有变化，不存储。");
-                return;
-            }
-
-            // 存增量（只存 DiffNode）
-            _history.Add(Snapshot.CreateDelta(name, diff));
+            // 使用版本号作为内部 key
+            var key = $"v{_snapshotKeys.Count}";
+            var snapshot = new Core.ElementArraySnapshot(name, "", ToCoreData(data));
+            _manager.AddSnapshot(key, snapshot);
+            _snapshotKeys.Add(key);
         }
 
-        // 获取还原后的某个版本
+        // 获取还原后的某个版本（重写实现）
         public List<List<Element>> GetSnapshot(int version)
         {
-            if (version < 0 || version >= _history.Count)
+            if (version < 0 || version >= _snapshotKeys.Count)
                 throw new Exception("版本不存在");
 
-            List<List<Element>> result = null;
-
-            for (int i = 0; i <= version; i++)
-            {
-                var snap = _history[i];
-
-                if (snap.IsFull)
-                {
-                    result = Clone2D(snap.Data);
-                }
-                else
-                {
-                    ApplyDiff(result, snap.Diff);
-                }
-            }
-
-            return result;
+            var key = _snapshotKeys[version];
+            var snapshot = _manager.GetSnapshot(key);
+            return FromCoreData(snapshot.GetData());
         }
 
 #if !NET45
-        // 导出 JSON（可全量或某版本）
+        // 导出 JSON（重写实现）
         public string ExportJson(bool allHistory = false, int version = -1)
         {
+            // 为了保持 API 兼容，我们动态构建旧的 Snapshot 结构
             if (allHistory)
-                return JsonSerializer.Serialize(_history, new JsonSerializerOptions { WriteIndented = true });
+            {
+                var historyForJson = new List<Snapshot>();
+                for (int i = 0; i < _snapshotKeys.Count; i++)
+                {
+                    var coreSnap = _manager.GetSnapshot(_snapshotKeys[i]);
+                    historyForJson.Add(new Snapshot
+                    {
+                        Name = coreSnap.Name,
+                        Time = coreSnap.Timestamp,
+                        IsFull = true, // 核心库总是存完整快照
+                        Data = FromCoreData(coreSnap.GetData()),
+                        Diff = null
+                    });
+                }
+                return JsonSerializer.Serialize(historyForJson, new JsonSerializerOptions { WriteIndented = true });
+            }
 
-            if (version >= 0)
-                return JsonSerializer.Serialize(_history[version], new JsonSerializerOptions { WriteIndented = true });
+            if (version >= 0 && version < _snapshotKeys.Count)
+            {
+                var coreSnap = _manager.GetSnapshot(_snapshotKeys[version]);
+                var snapForJson = new Snapshot
+                {
+                    Name = coreSnap.Name,
+                    Time = coreSnap.Timestamp,
+                    IsFull = true,
+                    Data = FromCoreData(coreSnap.GetData()),
+                    Diff = null
+                };
+                return JsonSerializer.Serialize(snapForJson, new JsonSerializerOptions { WriteIndented = true });
+            }
 
             throw new Exception("ExportJson 参数错误");
         }
 #endif
 
-        // 返回两版本之间的 diff
+        // 返回两版本之间的 diff（重写实现）
         public DiffNode DiffVersion(int a, int b)
         {
-            return DiffArrays(GetSnapshot(a), GetSnapshot(b));
+            if (a < 0 || a >= _snapshotKeys.Count || b < 0 || b >= _snapshotKeys.Count)
+                throw new Exception("版本不存在");
+
+            var keyA = _snapshotKeys[a];
+            var keyB = _snapshotKeys[b];
+
+            var coreDiffNode = _manager.Diff(keyA, keyB);
+
+            // 将 Core.DiffNode 映射回 SimpleSnapManager.DiffNode
+            return MapDiffNode(coreDiffNode);
         }
 
         // =====================================================================
-        //  Snapshot（完整 or 增量）
+        //  适配器和映射逻辑 (新增)
+        // =====================================================================
+
+        // 内部适配器类，桥接 Simple.Element 和 Core.ElementBase
+        private class MyElement : Core.ElementBase
+        {
+            public Element Source { get; }
+
+            public MyElement(Element source)
+            {
+                Source = source;
+            }
+
+            public override Core.ElementBase DeepClone()
+            {
+                return new MyElement(Source.Clone());
+            }
+
+            // 使用核心库的默认反射比较机制
+            public override Core.DiffNode Diff(Core.ElementBase? oldValue, Core.ElementBase? newValue)
+            {
+                var oldMy = oldValue as MyElement;
+                var newMy = newValue as MyElement;
+                // 注意：这里我们比较的是 Source，即原始的 SimpleSnapManager.Element
+                return base.Diff(oldMy?.Source, newMy?.Source);
+            }
+        }
+
+        // 将 Core.DiffNode 递归映射到 SimpleSnapManager.DiffNode
+        private DiffNode MapDiffNode(Core.DiffNode coreNode)
+        {
+            if (coreNode == null) return null;
+
+            var node = new DiffNode
+            {
+                Name = coreNode.Name,
+                Type = (DiffType)coreNode.Type, // 枚举值是对应的
+                OldValue = coreNode.OldValue,
+                NewValue = coreNode.NewValue,
+                Children = coreNode.Children.Select(MapDiffNode).ToList()
+            };
+            return node;
+        }
+
+        // 数据转换
+        private List<List<Core.ElementBase>> ToCoreData(List<List<Element>> data)
+        {
+            return data.Select(row => row.Select(e => e == null ? null : new MyElement(e)).Cast<Core.ElementBase>().ToList()).ToList();
+        }
+
+        private List<List<Element>> FromCoreData(List<List<Core.ElementBase>> coreData)
+        {
+            return coreData.Select(row => row.Select(e => (e as MyElement)?.Source).ToList()).ToList();
+        }
+
+
+        // =====================================================================
+        //  Snapshot（完整 or 增量） - 保持不变，用于 ExportJson
         // =====================================================================
         public class Snapshot
         {
@@ -169,147 +237,6 @@ namespace SimpleSnapManager
             Modified
         }
 
-        // =====================================================================
-        //  Diff 引擎（自动反射字段级别 diff）
-        // =====================================================================
-        private DiffNode DiffArrays(List<List<Element>> oldArr, List<List<Element>> newArr)
-        {
-            var root = new DiffNode { Name = "Root" };
-
-            int maxRows = Math.Max(oldArr.Count, newArr.Count);
-
-            for (int r = 0; r < maxRows; r++)
-            {
-                if (r >= oldArr.Count)
-                {
-                    root.Children.Add(new DiffNode { Name = $"Row[{r}]", Type = DiffType.Added });
-                    continue;
-                }
-                if (r >= newArr.Count)
-                {
-                    root.Children.Add(new DiffNode { Name = $"Row[{r}]", Type = DiffType.Removed });
-                    continue;
-                }
-
-                var rowNode = new DiffNode { Name = $"Row[{r}]" };
-
-                int maxCols = Math.Max(oldArr[r].Count, newArr[r].Count);
-
-                for (int c = 0; c < maxCols; c++)
-                {
-                    if (c >= oldArr[r].Count)
-                    {
-                        rowNode.Children.Add(new DiffNode { Name = $"Col[{c}]", Type = DiffType.Added });
-                        continue;
-                    }
-                    if (c >= newArr[r].Count)
-                    {
-                        rowNode.Children.Add(new DiffNode { Name = $"Col[{c}]", Type = DiffType.Removed });
-                        continue;
-                    }
-
-                    var elementNode = DiffElement(oldArr[r][c], newArr[r][c]);
-                    elementNode.Name = $"Col[{c}]";
-
-                    if (elementNode.HasDifference)
-                        rowNode.Children.Add(elementNode);
-                }
-
-                if (rowNode.Children.Count > 0)
-                    root.Children.Add(rowNode);
-            }
-
-            return root;
-        }
-
-        private DiffNode DiffElement(Element oldE, Element newE)
-        {
-            var node = new DiffNode { Name = "Element" };
-
-            foreach (var p in _elementProperties.Values)
-            {
-                var ov = p.GetValue(oldE);
-                var nv = p.GetValue(newE);
-
-                if (!Equals(ov, nv))
-                {
-                    node.Children.Add(new DiffNode
-                    {
-                        Name = p.Name,
-                        Type = DiffType.Modified,
-                        OldValue = ov,
-                        NewValue = nv
-                    });
-                }
-            }
-
-            return node;
-        }
-
-        // =====================================================================
-        //  工具函数：DeepClone 2D 数组
-        // =====================================================================
-        private static List<List<Element>> Clone2D(List<List<Element>> src)
-        {
-            return src.Select(row => row.Select(e => e?.Clone()).ToList()).ToList();
-        }
-
-        // =====================================================================
-        //  增量恢复（基于 DiffNode 应用修改）
-        // =====================================================================
-        private void ApplyDiff(List<List<Element>> data, DiffNode diff)
-        {
-            foreach (var rowNode in diff.Children)
-            {
-                int rowIndex = ExtractIndex(rowNode.Name);
-
-                if (rowNode.Type == DiffType.Added)
-                {
-                    data.Add(new List<Element>()); // 你可以改
-                    continue;
-                }
-
-                if (rowNode.Type == DiffType.Removed)
-                {
-                    data.RemoveAt(rowIndex);
-                    continue;
-                }
-
-                foreach (var colNode in rowNode.Children)
-                {
-                    int colIndex = ExtractIndex(colNode.Name);
-
-                    if (colNode.Type == DiffType.Added)
-                    {
-                        data[rowIndex].Add(new Element());
-                        continue;
-                    }
-
-                    if (colNode.Type == DiffType.Removed)
-                    {
-                        data[rowIndex].RemoveAt(colIndex);
-                        continue;
-                    }
-
-                    // 修改字段
-                    foreach (var fieldNode in colNode.Children)
-                    {
-                        var e = data[rowIndex][colIndex];
-                        if (_elementProperties.TryGetValue(fieldNode.Name, out var prop))
-                        {
-                            prop.SetValue(e, fieldNode.NewValue);
-                        }
-                    }
-                }
-            }
-        }
-
-        private int ExtractIndex(string name)
-        {
-            int a = name.IndexOf('[');
-            int b = name.IndexOf(']');
-            return int.Parse(name.Substring(a + 1, b - a - 1));
-        }
     }
 
 }
