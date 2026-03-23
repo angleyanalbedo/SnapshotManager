@@ -79,7 +79,7 @@ namespace SnapshotManager.Models
 
         private static List<T> Clone(List<T> src)
         {
-            if (src == null) return null;
+            if (src == null) return null!;
 
             // 优化：预分配 Capacity
             var result = new List<T>(src.Count);
@@ -110,7 +110,7 @@ namespace SnapshotManager.Models
 
         private static List<List<T>> Clone(List<List<T>> src)
         {
-            if (src == null) return null;
+            if (src == null) return null!;
 
             // 优化：预分配外层 List Capacity
             var result = new List<List<T>>(src.Count);
@@ -148,7 +148,7 @@ namespace SnapshotManager.Models
 
         private static List<List<ElementBase>> DeepClone2D(List<List<ElementBase>> src)
         {
-            if (src == null) return null;
+            if (src == null) return null!;
 
             // 优化：移除 LINQ，使用预分配容量的循环
             var result = new List<List<ElementBase>>(src.Count);

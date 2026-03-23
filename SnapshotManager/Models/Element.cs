@@ -104,7 +104,7 @@ namespace SnapshotManager.Models
         /// <inheritdoc />
         public override ElementBase DeepClone()
         {
-            if (Data == null) return new JsonElement<T>(default);
+            if (Data == null) return new JsonElement<T>(default!);
 
             // 偷懒的深拷贝：序列化再反序列化
             var json = JsonSerializer.Serialize(Data);
