@@ -139,5 +139,39 @@ namespace SnapshotManager.Tests
             Assert.NotNull(row2Node);
             Assert.Equal(DiffType.Added, row2Node.Type);
         }
+
+        [Fact]
+        public void HashSetManager_ShouldHandleSimpleIntSet()
+        {
+            // Arrange
+            // 1. 使用工厂创建针对 HashSet<int> 的管理器
+            var manager = ContainerSnapshotManagerFactory.CreateHashSetManager<int>();
+
+            // 2. 准备初始数据
+            var initialData = new HashSet<int> { 1, 2, 3 };
+
+            // 3. 创建快照
+            var snapKey1 = manager.TakeSnapshot(new HashSetElement<int>(initialData));
+
+            // 4. 修改数据
+            initialData.Add(4);       // 新增
+            initialData.Remove(2);    // 删除
+
+            // Act
+            var diff = manager.DiffWith(snapKey1, new HashSetElement<int>(initialData));
+
+            // Assert
+            Assert.True(diff.HasDifference);
+
+            // 验证 Item[2] 删除
+            var remNode = diff.Children.FirstOrDefault(c => c.Name == "Item[2]");
+            Assert.NotNull(remNode);
+            Assert.Equal(DiffType.Removed, remNode.Type);
+
+            // 验证 Item[4] 新增
+            var addNode = diff.Children.FirstOrDefault(c => c.Name == "Item[4]");
+            Assert.NotNull(addNode);
+            Assert.Equal(DiffType.Added, addNode.Type);
+        }
     }
 }

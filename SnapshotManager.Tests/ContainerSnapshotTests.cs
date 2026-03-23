@@ -60,5 +60,31 @@ namespace SnapshotManager.Tests
             Assert.Contains(diff.Children, c => c.Name == "Key[k3]" && c.Type == DiffType.Added);
             Assert.Equal("v3", diff.Children.Find(c => c.Name == "Key[k3]")?.NewValue);
         }
+
+        [Fact]
+        public void HashSetSnapshot_Diff_ShouldDetectChanges()
+        {
+            // Arrange
+            var set1 = new HashSet<int> { 1, 2, 3 };
+            var set2 = new HashSet<int> { 1, 3, 4 }; // 2 removed, 4 added
+
+            var snap1 = new HashSetSnapshot<int>("snap1", "desc", set1);
+            var snap2 = new HashSetSnapshot<int>("snap2", "desc", set2);
+
+            var differ = new HashSetElementDiff<int>();
+
+            // Act
+            var diff = differ.Diff(snap1.Data, snap2.Data);
+
+            // Assert
+            Assert.True(diff.HasDifference);
+            Assert.Equal("HashSet", diff.Name);
+
+            // Item[2] removed
+            Assert.Contains(diff.Children, c => c.Name == "Item[2]" && c.Type == DiffType.Removed);
+
+            // Item[4] added
+            Assert.Contains(diff.Children, c => c.Name == "Item[4]" && c.Type == DiffType.Added);
+        }
     }
 }

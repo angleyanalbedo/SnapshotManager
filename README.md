@@ -175,6 +175,10 @@ string diffText = listManager.DiffWithAndFormat(snapKey, new PrimitiveListElemen
 *   **SnapshotManager.Core**: 核心逻辑实现 (`SnapshotManager`, `Diff` 算法)。
 *   **SnapshotManager.Extensions**: 便捷操作的扩展方法。
 
+## 📚 文档 (Documentation)
+
+更详细的使用指南和最佳实践，请参阅 [docs/UsageGuide.md](docs/UsageGuide.md)。
+
 ## 📄 License
 
 [LICENSE.txt](LICENSE.txt)
