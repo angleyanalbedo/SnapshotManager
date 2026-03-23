@@ -325,5 +325,26 @@ namespace SnapshotManager.Tests
             Assert.NotNull(mockPrinter.LastReceivedNode);
             Assert.True(mockPrinter.LastReceivedNode.HasDifference);
         }
+
+        [Fact]
+        public void DiffWithAndFormat_CallsFormatterWithCorrectDiff()
+        {
+            // Arrange
+            var elements1 = new List<List<ElementBase>> { new() { new MyElement { Value = 10 } } };
+            var manager = ElementSnapshotManagerFactory.Create();
+            manager.AddSnapshot(new ElementArraySnapshot("s1", "v1", elements1));
+
+            var elements2 = new List<List<ElementBase>> { new() { new MyElement { Value = 99 } } };
+
+            var mockFormatter = new MockDiffFormatter();
+
+            // Act
+            var result = manager.DiffWithAndFormat("s1", elements2, mockFormatter);
+
+            // Assert
+            Assert.Equal("Formatted by Mock", result);
+            Assert.NotNull(mockFormatter.LastReceivedNode);
+            Assert.True(mockFormatter.LastReceivedNode.HasDifference);
+        }
     }
 }

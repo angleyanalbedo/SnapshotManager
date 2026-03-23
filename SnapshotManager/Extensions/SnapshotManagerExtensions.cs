@@ -34,5 +34,15 @@ namespace SnapshotManager.Extensions
             formatter ??= new StringDiffFormatter();
             return formatter.Format(diffNode);
         }
+
+        /// <summary>
+        /// 比较基准快照与当前数据，并返回格式化后的差异字符串
+        /// </summary>
+        public static string DiffWithAndFormat<T>(this ISnapshotManager<T> manager, string baseSnapKey, T currentData, IDiffFormatter? formatter = null)
+        {
+            var diffNode = manager.DiffWith(baseSnapKey, currentData);
+            formatter ??= new StringDiffFormatter();
+            return formatter.Format(diffNode);
+        }
     }
 }
