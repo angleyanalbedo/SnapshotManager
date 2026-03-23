@@ -162,7 +162,7 @@ namespace SnapshotManager.Tests
         public class TestElement : ElementBase
         {
             public int Value { get; set; }
-            public string Name { get; set; }
+            public string Name { get; set; } = "";
 
             public override ElementBase DeepClone()
             {
@@ -184,7 +184,7 @@ namespace SnapshotManager.Tests
             };
 
             // 3. 测试 TakeSnapshot (自动生成 Key)
-            string snapKey1 = manager.TakeSnapshot(data);
+            string snapKey1 = manager.TakeSnapshot(new MatrixElement(data));
             Assert.False(string.IsNullOrEmpty(snapKey1));
 
             // 4. 修改内存数据
@@ -193,7 +193,7 @@ namespace SnapshotManager.Tests
 
             // 5. 测试 DiffWith (实时对比：快照 vs 当前内存数据)
             // 预期：检测到 (0,0) 的变化
-            var diffNode = manager.DiffWith(snapKey1, data);
+            var diffNode = manager.DiffWith(snapKey1, new MatrixElement(data));
             
             Assert.True(diffNode.HasDifference);
             
@@ -209,7 +209,7 @@ namespace SnapshotManager.Tests
             Assert.Equal(999, valNode.NewValue);
 
             // 6. 测试 TakeSnapshot (指定 Key)
-            manager.TakeSnapshot("v2", data);
+            manager.TakeSnapshot("v2", new MatrixElement(data));
 
             // 7. 测试 Diff (历史对比：v1 vs v2)
             var historyDiff = manager.Diff(snapKey1, "v2");
@@ -218,7 +218,7 @@ namespace SnapshotManager.Tests
             // 8. 验证 v2 和当前数据一致 (DiffWith 应该无差异)
             // 注意：这里需要确保 TestElement 的 Equals 逻辑或者 Diff 逻辑能正确处理相同值
             // 由于 ElementDiff 是基于属性反射对比的，只要属性值一样，Diff 就会返回 None
-            var noDiff = manager.DiffWith("v2", data);
+            var noDiff = manager.DiffWith("v2", new MatrixElement(data));
             Assert.False(noDiff.HasDifference);
         }
     }
@@ -318,7 +318,7 @@ namespace SnapshotManager.Tests
             var mockPrinter = new MockDiffPrinter();
 
             // Act
-            manager.DiffWithAndPrint("s1", elements2, mockPrinter);
+            manager.DiffWithAndPrint("s1", new MatrixElement(elements2), mockPrinter);
 
             // Assert
             Assert.Equal(1, mockPrinter.PrintCallCount);
@@ -339,7 +339,7 @@ namespace SnapshotManager.Tests
             var mockFormatter = new MockDiffFormatter();
 
             // Act
-            var result = manager.DiffWithAndFormat("s1", elements2, mockFormatter);
+            var result = manager.DiffWithAndFormat("s1", new MatrixElement(elements2), mockFormatter);
 
             // Assert
             Assert.Equal("Formatted by Mock", result);

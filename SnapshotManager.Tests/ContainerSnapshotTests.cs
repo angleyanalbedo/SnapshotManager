@@ -17,7 +17,7 @@ namespace SnapshotManager.Tests
             var snap1 = new PrimitiveListSnapshot<int>("snap1", "desc", list1);
             var snap2 = new PrimitiveListSnapshot<int>("snap2", "desc", list2);
 
-            var differ = new ListDiff<int>(new BasicDiff<int>());
+            var differ = new PrimitiveListElementDiff<int>();
 
             // Act
             var diff = differ.Diff(snap1.Data, snap2.Data);
@@ -42,7 +42,7 @@ namespace SnapshotManager.Tests
             var snap1 = new DictionarySnapshot<string, string>("snap1", "desc", dict1);
             var snap2 = new DictionarySnapshot<string, string>("snap2", "desc", dict2);
 
-            var differ = new DictionaryDiff<string, string>(new BasicDiff<string>());
+            var differ = new DictionaryElementDiff<string, string>();
 
             // Act
             var diff = differ.Diff(snap1.Data, snap2.Data);
