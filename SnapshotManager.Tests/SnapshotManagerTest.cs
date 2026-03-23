@@ -347,4 +347,64 @@ namespace SnapshotManager.Tests
             Assert.True(mockFormatter.LastReceivedNode.HasDifference);
         }
     }
+
+    public class FactoryTests
+    {
+        [Fact]
+        public void ElementSnapshotManagerFactory_Create_ShouldReturnWorkingManager()
+        {
+            // Arrange
+            var manager = ElementSnapshotManagerFactory.Create();
+            var data = new List<List<ElementBase>> { new() { new ValueElement<int>(1) } };
+            var matrix = new MatrixElement(data);
+
+            // Act
+            var key = manager.TakeSnapshot(matrix);
+            var snapshot = manager.GetSnapshot(key);
+
+            // Assert
+            Assert.NotNull(manager);
+            Assert.NotNull(snapshot);
+            Assert.IsType<ElementArraySnapshot>(snapshot);
+            Assert.Equal(1, ((ValueElement<int>)snapshot.Data.Rows[0][0]).Value);
+        }
+
+        [Fact]
+        public void ContainerSnapshotManagerFactory_CreateListManager_ShouldReturnWorkingManager()
+        {
+            // Arrange
+            var manager = ContainerSnapshotManagerFactory.CreateListManager<int>();
+            var list = new List<int> { 1, 2, 3 };
+            var element = new PrimitiveListElement<int>(list);
+
+            // Act
+            var key = manager.TakeSnapshot(element);
+            var snapshot = manager.GetSnapshot(key);
+
+            // Assert
+            Assert.NotNull(manager);
+            Assert.NotNull(snapshot);
+            Assert.IsType<PrimitiveListSnapshot<int>>(snapshot);
+            Assert.Equal(3, snapshot.Data.Items.Count);
+        }
+
+        [Fact]
+        public void ContainerSnapshotManagerFactory_CreateDictionaryManager_ShouldReturnWorkingManager()
+        {
+            // Arrange
+            var manager = ContainerSnapshotManagerFactory.CreateDictionaryManager<string, int>();
+            var dict = new Dictionary<string, int> { { "A", 1 } };
+            var element = new DictionaryElement<string, int>(dict);
+
+            // Act
+            var key = manager.TakeSnapshot(element);
+            var snapshot = manager.GetSnapshot(key);
+
+            // Assert
+            Assert.NotNull(manager);
+            Assert.NotNull(snapshot);
+            Assert.IsType<DictionarySnapshot<string, int>>(snapshot);
+            Assert.Equal(1, snapshot.Data.Map["A"]);
+        }
+    }
 }
