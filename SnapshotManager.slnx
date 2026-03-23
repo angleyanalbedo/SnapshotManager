@@ -1,4 +1,4 @@
 <Solution>
+  <Project Path="SnapshotManager.Tests/SnapshotManagerTests.csproj" />
   <Project Path="SnapshotManager/SnapshotManager.csproj" />
-  <Project Path="Test/Test.csproj" />
 </Solution>
