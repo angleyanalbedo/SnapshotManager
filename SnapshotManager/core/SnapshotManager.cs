@@ -6,6 +6,10 @@ using System.Text;
 
 namespace SnapshotManager.core
 {
+    /// <summary>
+    /// 通用的快照管理器实现。
+    /// </summary>
+    /// <typeparam name="T">被管理的数据类型。</typeparam>
     public class SnapshotManager<T> : ISnapshotManager<T>
     {
         private readonly Dictionary<string, Snapshot<T>> _history =
@@ -16,7 +20,10 @@ namespace SnapshotManager.core
         // [修改] 工厂现在接收 (key, data) 两个参数
         private readonly Func<string, T, Snapshot<T>>? _snapshotFactory;
 
-        // 构造函数 1
+        /// <summary>
+        /// 初始化管理器。尝试从类型 T 自身获取 IDiff 实现。
+        /// </summary>
+        /// <param name="snapshotFactory">可选。用于将数据包装为 Snapshot 的工厂委托。</param>
         public SnapshotManager(Func<string, T, Snapshot<T>>? snapshotFactory = null)
         {
             _snapshotFactory = snapshotFactory;
@@ -34,14 +41,22 @@ namespace SnapshotManager.core
             }
         }
 
-        // 构造函数 2
+        /// <summary>
+        /// 初始化管理器，注入自定义的比较委托。
+        /// </summary>
+        /// <param name="diffFunc">用于对比两个 T 对象的委托。</param>
+        /// <param name="snapshotFactory">可选。用于将数据包装为 Snapshot 的工厂委托。</param>
         public SnapshotManager(Func<T?, T?, DiffNode> diffFunc, Func<string, T, Snapshot<T>>? snapshotFactory = null)
         {
             _diffFunc = diffFunc;
             _snapshotFactory = snapshotFactory;
         }
 
-        // 构造函数 3
+        /// <summary>
+        /// 初始化管理器，注入自定义的比较器对象。
+        /// </summary>
+        /// <param name="diffObj">实现了 IDiff 接口的比较器。</param>
+        /// <param name="snapshotFactory">可选。用于将数据包装为 Snapshot 的工厂委托。</param>
         public SnapshotManager(IDiff<T> diffObj, Func<string, T, Snapshot<T>>? snapshotFactory = null)
         {
             _diffFunc = diffObj.Diff;
@@ -50,6 +65,7 @@ namespace SnapshotManager.core
 
 
 
+        /// <inheritdoc />
         public void AddSnapshot(Snapshot<T> snapshot)
         {
             // 如果 snapshot 没有名字，自动生成一个
@@ -60,6 +76,7 @@ namespace SnapshotManager.core
             _history[key] = snapshot;
         }
 
+        /// <inheritdoc />
         public Snapshot<T> GetSnapshot(string name)
         {
             if (!_history.TryGetValue(name, out var snap))
@@ -67,12 +84,13 @@ namespace SnapshotManager.core
             return snap;
         }
 
+        /// <inheritdoc />
         public void AddSnapshot(string key, Snapshot<T> snapshot)
         {
             _history[key] = snapshot;
         }
 
-        // [新增] 实现 TakeSnapshot (自动 Key)
+        /// <inheritdoc />
         public string TakeSnapshot(T data)
         {
             var key = DateTime.Now.ToString("yyyyMMdd_HHmmss_fff");
@@ -80,6 +98,7 @@ namespace SnapshotManager.core
             return key;
         }
 
+        /// <inheritdoc />
         public void TakeSnapshot(string key, T data)
         {
             if (_snapshotFactory == null)
@@ -91,12 +110,13 @@ namespace SnapshotManager.core
             _history[key] = snapshot;
         }
 
+        /// <inheritdoc />
         public IEnumerable<Snapshot<T>> ListSnapshots()
         {
             return _history.Values.OrderBy(s => s.TimeStamp);
         }
 
-        // 统一后的 Diff 方法
+        /// <inheritdoc />
         public DiffNode Diff(string snapA, string snapB)
         {
             if (_diffFunc is null)
@@ -108,7 +128,7 @@ namespace SnapshotManager.core
             return _diffFunc(a, b);
         }
 
-        // [新增] 实现 DiffWith (快照 vs 数据)
+        /// <inheritdoc />
         public DiffNode DiffWith(string baseSnapKey, T currentData)
         {
             if (_diffFunc is null)
@@ -119,16 +139,22 @@ namespace SnapshotManager.core
         }
     }
 
-    // 工厂类更新：使用组合模式构建 Diff 逻辑
+    /// <summary>
+    /// 针对 ElementBase 二维列表的管理器工厂。
+    /// </summary>
     public static class ElementSnapshotManagerFactory
     {
+        /// <summary>
+        /// 创建一个预配置的管理器，用于处理 List&lt;List&lt;ElementBase&gt;&gt; 类型的数据。
+        /// <para>已内置 MatrixDiff 和 ElementDiff 算法。</para>
+        /// </summary>
+        /// <returns>配置好的 SnapshotManager 实例。</returns>
         public static SnapshotManager<List<List<ElementBase>>> Create()
         {
             // 组装：MatrixDiff -> ElementDiff
             var elementDiff = new ElementDiff();
             var matrixDiff = new MatrixDiff<ElementBase>(elementDiff);
 
-            // [修改] 修复编译错误：传入 key 和 默认描述
             return new SnapshotManager<List<List<ElementBase>>>(
                 matrixDiff, 
                 (key, data) => new ElementArraySnapshot(key, "Auto Generated Snapshot", data)
