@@ -148,6 +148,24 @@ namespace SnapshotManager.Output
                     return sb.ToString().TrimEnd();
                 }
 
+                // HashSetElement<T>
+                if (genericDef == typeof(HashSetElement<>))
+                {
+                    var setProp = type.GetProperty("Set");
+                    var set = (IEnumerable)setProp.GetValue(element);
+                    
+                    // 反射获取 Count
+                    var countProp = set.GetType().GetProperty("Count");
+                    var count = (int)(countProp?.GetValue(set) ?? 0);
+
+                    sb.AppendLine($"{indent}HashSet ({count} items):");
+                    foreach (var item in set)
+                    {
+                        sb.AppendLine($"{indent}  - {item}");
+                    }
+                    return sb.ToString().TrimEnd();
+                }
+
                 // ValueElement<T>
                 if (genericDef == typeof(ValueElement<>))
                 {

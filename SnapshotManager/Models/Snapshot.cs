@@ -125,4 +125,27 @@ namespace SnapshotManager.Models
         {
         }
     }
+
+    /// <summary>
+    /// 针对 HashSet 类型的快照实现。
+    /// </summary>
+    /// <typeparam name="T">元素类型。</typeparam>
+    public class HashSetSnapshot<T> : Snapshot<HashSetElement<T>>
+    {
+        /// <summary>
+        /// 创建 HashSet 快照。
+        /// </summary>
+        public HashSetSnapshot(string name, string description, HashSetElement<T> source)
+            : base(name, description, source)
+        {
+        }
+
+        /// <summary>
+        /// 辅助构造函数：从原始 HashSet 创建。
+        /// </summary>
+        public HashSetSnapshot(string name, string description, HashSet<T> source)
+            : base(name, description, new HashSetElement<T>(source))
+        {
+        }
+    }
 }

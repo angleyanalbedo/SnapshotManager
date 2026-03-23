@@ -198,6 +198,33 @@ namespace SnapshotManager.Models
     }
 
     /// <summary>
+    /// HashSet 类型的 Element 包装器。
+    /// </summary>
+    /// <typeparam name="T">元素类型。</typeparam>
+    public class HashSetElement<T> : ElementBase
+    {
+        /// <summary>
+        /// 内部存储的 HashSet。
+        /// </summary>
+        public HashSet<T> Set { get; set; }
+
+        /// <summary>
+        /// 初始化 HashSet 包装器。
+        /// </summary>
+        /// <param name="set">原始 HashSet。</param>
+        public HashSetElement(HashSet<T> set)
+        {
+            Set = set ?? new HashSet<T>();
+        }
+
+        /// <inheritdoc />
+        public override ElementBase DeepClone()
+        {
+            return new HashSetElement<T>(new HashSet<T>(Set));
+        }
+    }
+
+    /// <summary>
     /// ElementBase 二维矩阵的包装器。
     /// </summary>
     public class MatrixElement : ElementBase

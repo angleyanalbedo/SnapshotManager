@@ -351,6 +351,51 @@ namespace SnapshotManager.Core
         }
     }
 
+    /// <summary>
+    /// HashSet 差异比较器。
+    /// </summary>
+    /// <typeparam name="T">元素类型。</typeparam>
+    public class HashSetDiff<T> : IDiff<HashSet<T>>
+    {
+        /// <inheritdoc />
+        public DiffNode Diff(HashSet<T>? oldSet, HashSet<T>? newSet)
+        {
+            var root = new DiffNode { Name = "HashSet" };
+            oldSet ??= new HashSet<T>();
+            newSet ??= new HashSet<T>();
+
+            // 检查移除的元素
+            foreach (var item in oldSet)
+            {
+                if (!newSet.Contains(item))
+                {
+                    root.Children.Add(new DiffNode
+                    {
+                        Name = $"Item[{item}]",
+                        Type = DiffType.Removed,
+                        OldValue = item
+                    });
+                }
+            }
+
+            // 检查新增的元素
+            foreach (var item in newSet)
+            {
+                if (!oldSet.Contains(item))
+                {
+                    root.Children.Add(new DiffNode
+                    {
+                        Name = $"Item[{item}]",
+                        Type = DiffType.Added,
+                        NewValue = item
+                    });
+                }
+            }
+
+            return root;
+        }
+    }
+
     // --- Element Wrappers Diffs ---
 
     /// <summary>
@@ -397,6 +442,21 @@ namespace SnapshotManager.Core
         public DiffNode Diff(DictionaryElement<K, V>? oldValue, DictionaryElement<K, V>? newValue)
         {
             return _internalDiff.Diff(oldValue?.Map, newValue?.Map);
+        }
+    }
+
+    /// <summary>
+    /// HashSet 包装器的差异比较器。
+    /// </summary>
+    /// <typeparam name="T">元素类型。</typeparam>
+    public class HashSetElementDiff<T> : IDiff<HashSetElement<T>>
+    {
+        private readonly HashSetDiff<T> _internalDiff = new HashSetDiff<T>();
+
+        /// <inheritdoc />
+        public DiffNode Diff(HashSetElement<T>? oldValue, HashSetElement<T>? newValue)
+        {
+            return _internalDiff.Diff(oldValue?.Set, newValue?.Set);
         }
     }
 

@@ -195,6 +195,23 @@ namespace SnapshotManager.Core
     }
 
     /// <summary>
+    /// 针对 HashSet（如 HashSet&lt;int&gt;）的专用管理器。
+    /// </summary>
+    /// <typeparam name="T">元素类型。</typeparam>
+    public class HashSetSnapshotManager<T> : SnapshotManager<HashSetSnapshot<T>, HashSetElement<T>>
+    {
+        /// <summary>
+        /// 初始化 HashSet 快照管理器。
+        /// </summary>
+        public HashSetSnapshotManager()
+            : base(
+                  new HashSetElementDiff<T>(),
+                  (key, data) => new HashSetSnapshot<T>(key, "Auto Generated", data))
+        {
+        }
+    }
+
+    /// <summary>
     /// 容器快照管理器工厂。
     /// </summary>
     public static class ContainerSnapshotManagerFactory
@@ -213,6 +230,14 @@ namespace SnapshotManager.Core
         public static DictionarySnapshotManager<K, V> CreateDictionaryManager<K, V>()
         {
             return new DictionarySnapshotManager<K, V>();
+        }
+
+        /// <summary>
+        /// 创建 HashSet 管理器。
+        /// </summary>
+        public static HashSetSnapshotManager<T> CreateHashSetManager<T>()
+        {
+            return new HashSetSnapshotManager<T>();
         }
     }
 
