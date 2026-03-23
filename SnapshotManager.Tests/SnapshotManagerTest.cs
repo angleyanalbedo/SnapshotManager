@@ -4,6 +4,7 @@ using Xunit.Abstractions;
 using System.Collections.Generic;
 using Xunit;
 using System.Linq;
+using System; // 添加 System 引用
 
 namespace SnapshotManager.Tests
 {
@@ -149,6 +150,74 @@ namespace SnapshotManager.Tests
             
             Assert.NotNull(col1);
             Assert.Equal(DiffType.Added, col1.Type);
+        }
+    }
+
+    // [新增] 新 API 测试类
+    public class SnapshotManagerNewApiTests
+    {
+        // 简单的测试用 Element
+        public class TestElement : ElementBase
+        {
+            public int Value { get; set; }
+            public string Name { get; set; }
+
+            public override ElementBase DeepClone()
+            {
+                return new TestElement { Value = Value, Name = Name };
+            }
+        }
+
+        [Fact]
+        public void TakeSnapshot_And_DiffWith_ShouldWorkCorrectly()
+        {
+            // 1. 初始化 Manager
+            var manager = ElementSnapshotManagerFactory.Create();
+
+            // 2. 准备初始数据
+            var data = new List<List<ElementBase>>
+            {
+                new() { new TestElement { Value = 1, Name = "A" } },
+                new() { new TestElement { Value = 2, Name = "B" } }
+            };
+
+            // 3. 测试 TakeSnapshot (自动生成 Key)
+            string snapKey1 = manager.TakeSnapshot(data);
+            Assert.False(string.IsNullOrEmpty(snapKey1));
+
+            // 4. 修改内存数据
+            // 修改 (0,0) 的值
+            ((TestElement)data[0][0]).Value = 999;
+
+            // 5. 测试 DiffWith (实时对比：快照 vs 当前内存数据)
+            // 预期：检测到 (0,0) 的变化
+            var diffNode = manager.DiffWith(snapKey1, data);
+            
+            Assert.True(diffNode.HasDifference);
+            
+            // 验证具体差异路径: Row[0] -> Col[0] -> Value
+            var rowNode = diffNode.Children.FirstOrDefault(c => c.Name == "Row[0]");
+            Assert.NotNull(rowNode);
+            var colNode = rowNode.Children.FirstOrDefault(c => c.Name == "Col[0]");
+            Assert.NotNull(colNode);
+            var valNode = colNode.Children.FirstOrDefault(c => c.Name == "Value");
+            Assert.NotNull(valNode);
+            Assert.Equal(DiffType.Modified, valNode.Type);
+            Assert.Equal(1, valNode.OldValue);
+            Assert.Equal(999, valNode.NewValue);
+
+            // 6. 测试 TakeSnapshot (指定 Key)
+            manager.TakeSnapshot("v2", data);
+
+            // 7. 测试 Diff (历史对比：v1 vs v2)
+            var historyDiff = manager.Diff(snapKey1, "v2");
+            Assert.True(historyDiff.HasDifference);
+            
+            // 8. 验证 v2 和当前数据一致 (DiffWith 应该无差异)
+            // 注意：这里需要确保 TestElement 的 Equals 逻辑或者 Diff 逻辑能正确处理相同值
+            // 由于 ElementDiff 是基于属性反射对比的，只要属性值一样，Diff 就会返回 None
+            var noDiff = manager.DiffWith("v2", data);
+            Assert.False(noDiff.HasDifference);
         }
     }
 }
