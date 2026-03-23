@@ -6,6 +6,8 @@ using Xunit;
 using System.Linq;
 using System;
 using SnapshotManager.Model; // 添加 System 引用
+using SnapshotManager.Extensions;
+using SnapshotManager.Abstruaction;
 
 namespace SnapshotManager.Tests
 {
@@ -219,6 +221,110 @@ namespace SnapshotManager.Tests
             // 由于 ElementDiff 是基于属性反射对比的，只要属性值一样，Diff 就会返回 None
             var noDiff = manager.DiffWith("v2", data);
             Assert.False(noDiff.HasDifference);
+        }
+    }
+
+    // [新增] 扩展方法测试
+    public class SnapshotManagerExtensionsTests
+    {
+        // 辅助类：用于测试的 Element
+        public class MyElement : ElementBase
+        {
+            public int Value { get; set; }
+
+            public override ElementBase DeepClone()
+            {
+                return new MyElement { Value = this.Value };
+            }
+        }
+
+        // Mock Formatter for testing
+        private class MockDiffFormatter : IDiffFormatter
+        {
+            public DiffNode? LastReceivedNode { get; private set; }
+            public string Format(DiffNode diffNode)
+            {
+                LastReceivedNode = diffNode;
+                return "Formatted by Mock";
+            }
+        }
+
+        // Mock Printer for testing
+        private class MockDiffPrinter : IDiffPrinter
+        {
+            public DiffNode? LastReceivedNode { get; private set; }
+            public int PrintCallCount { get; private set; } = 0;
+
+            public void Print(DiffNode diffNode)
+            {
+                LastReceivedNode = diffNode;
+                PrintCallCount++;
+            }
+        }
+
+        [Fact]
+        public void DiffAndFormat_CallsFormatterWithCorrectDiff()
+        {
+            // Arrange
+            var elements1 = new List<List<ElementBase>> { new() { new MyElement { Value = 10 } } };
+            var elements2 = new List<List<ElementBase>> { new() { new MyElement { Value = 99 } } };
+
+            var manager = ElementSnapshotManagerFactory.Create();
+            manager.AddSnapshot(new ElementArraySnapshot("s1", "v1", elements1));
+            manager.AddSnapshot(new ElementArraySnapshot("s2", "v2", elements2));
+
+            var mockFormatter = new MockDiffFormatter();
+
+            // Act
+            var result = manager.DiffAndFormat("s1", "s2", mockFormatter);
+
+            // Assert
+            Assert.Equal("Formatted by Mock", result);
+            Assert.NotNull(mockFormatter.LastReceivedNode);
+            Assert.True(mockFormatter.LastReceivedNode.HasDifference);
+        }
+
+        [Fact]
+        public void DiffAndPrint_CallsPrinterWithCorrectDiff()
+        {
+            // Arrange
+            var elements1 = new List<List<ElementBase>> { new() { new MyElement { Value = 10 } } };
+            var elements2 = new List<List<ElementBase>> { new() { new MyElement { Value = 99 } } };
+
+            var manager = ElementSnapshotManagerFactory.Create();
+            manager.AddSnapshot(new ElementArraySnapshot("s1", "v1", elements1));
+            manager.AddSnapshot(new ElementArraySnapshot("s2", "v2", elements2));
+
+            var mockPrinter = new MockDiffPrinter();
+
+            // Act
+            manager.DiffAndPrint("s1", "s2", mockPrinter);
+
+            // Assert
+            Assert.Equal(1, mockPrinter.PrintCallCount);
+            Assert.NotNull(mockPrinter.LastReceivedNode);
+            Assert.True(mockPrinter.LastReceivedNode.HasDifference);
+        }
+
+        [Fact]
+        public void DiffWithAndPrint_CallsPrinterWithCorrectDiff()
+        {
+            // Arrange
+            var elements1 = new List<List<ElementBase>> { new() { new MyElement { Value = 10 } } };
+            var manager = ElementSnapshotManagerFactory.Create();
+            manager.AddSnapshot(new ElementArraySnapshot("s1", "v1", elements1));
+
+            var elements2 = new List<List<ElementBase>> { new() { new MyElement { Value = 99 } } };
+
+            var mockPrinter = new MockDiffPrinter();
+
+            // Act
+            manager.DiffWithAndPrint("s1", elements2, mockPrinter);
+
+            // Assert
+            Assert.Equal(1, mockPrinter.PrintCallCount);
+            Assert.NotNull(mockPrinter.LastReceivedNode);
+            Assert.True(mockPrinter.LastReceivedNode.HasDifference);
         }
     }
 }
