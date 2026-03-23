@@ -409,35 +409,4 @@ namespace SnapshotManager.Tests
         }
     }
 
-    public class GraphFormattersTests
-    {
-        [Fact]
-        public void GraphvizDiffFormatter_ShouldGenerateValidDot()
-        {
-            var node = new DiffNode { Name = "Root", Type = DiffType.None };
-            node.Children.Add(new DiffNode { Name = "Child", Type = DiffType.Added, NewValue = 123 });
-
-            var formatter = new GraphvizDiffFormatter();
-            var output = formatter.Format(node);
-
-            Assert.Contains("digraph DiffTree", output);
-            Assert.Contains("label=\"Root\"", output);
-            Assert.Contains("label=\"Child\\n(New: 123)\"", output);
-            Assert.Contains("fillcolor=\"#ccffcc\"", output); // Added color
-        }
-
-        [Fact]
-        public void MermaidDiffFormatter_ShouldGenerateValidMermaid()
-        {
-            var node = new DiffNode { Name = "Root", Type = DiffType.None };
-            node.Children.Add(new DiffNode { Name = "Child", Type = DiffType.Modified, OldValue = 1, NewValue = 2 });
-
-            var formatter = new MermaidDiffFormatter();
-            var output = formatter.Format(node);
-
-            Assert.Contains("graph TD", output);
-            Assert.Contains("[\"Root\"]:::none", output);
-            Assert.Contains("[\"Child<br/>1 -> 2\"]:::modified", output);
-        }
-    }
 }

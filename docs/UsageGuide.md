@@ -136,6 +136,21 @@ string diffText = manager.DiffWithAndFormat(key, currentData);
 Console.WriteLine(diffText);
 ```
 
+### 3.1 打印快照详情
+
+除了打印差异，你也可以打印快照本身的详细信息（包含元数据和数据内容）。
+
+```csharp
+// 打印到控制台
+var printer = new ConsoleSnapshotPrinter();
+printer.Print(snapshot);
+
+// 导出为字符串
+var stringPrinter = new StringSnapshotPrinter();
+stringPrinter.Print(snapshot);
+string content = stringPrinter.Result;
+```
+
 ## 4. 核心概念详解
 
 ### 4.1 ElementBase 与数据包装

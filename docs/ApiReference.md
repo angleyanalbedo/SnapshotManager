@@ -36,3 +36,20 @@
 *   `DiffWithAndPrint(...)`: 对比当前数据并打印。
 *   `DiffAndFormat(...)`: 对比并返回字符串。
 *   `DiffWithAndFormat(...)`: 对比当前数据并返回字符串。
+
+## 输出与格式化 (Output & Formatting)
+
+位于 `SnapshotManager.Output` 命名空间。
+
+### 接口
+*   `ISnapshotPrinter`: 快照打印接口。
+*   `IDiffPrinter`: 差异打印接口。
+*   `IDiffFormatter`: 差异格式化接口。
+
+### 实现类
+*   `ConsoleSnapshotPrinter`: 打印快照到控制台。
+*   `StringSnapshotPrinter`: 打印快照到字符串。
+*   `ConsoleDiffPrinter`: 打印差异到控制台（带颜色）。
+*   `StringDiffFormatter`: 格式化差异为文本。
+*   `GraphvizDiffFormatter`: 格式化差异为 Graphviz DOT 语法。
+*   `MermaidDiffFormatter`: 格式化差异为 Mermaid 流程图语法。
