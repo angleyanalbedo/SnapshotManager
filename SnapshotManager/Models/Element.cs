@@ -5,7 +5,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text;
-#if !NET45
+#if NET45
+using Newtonsoft.Json;
+#else
 using System.Text.Json;
 #endif
 
@@ -107,8 +109,13 @@ namespace SnapshotManager.Models
             if (Data == null) return new JsonElement<T>(default!);
 
             // 偷懒的深拷贝：序列化再反序列化
+#if NET45
+            var json = JsonConvert.SerializeObject(Data);
+            var clone = JsonConvert.DeserializeObject<T>(json);
+#else
             var json = JsonSerializer.Serialize(Data);
             var clone = JsonSerializer.Deserialize<T>(json);
+#endif
             return new JsonElement<T>(clone!);
         }
 
@@ -119,8 +126,13 @@ namespace SnapshotManager.Models
             {
                 // 简单的比较逻辑：比较序列化后的 JSON 字符串
                 // (这能解决大部分 POCO 的比较问题，但效率一般)
+#if NET45
+                var jsonA = JsonConvert.SerializeObject(Data);
+                var jsonB = JsonConvert.SerializeObject(other.Data);
+#else
                 var jsonA = JsonSerializer.Serialize(Data);
                 var jsonB = JsonSerializer.Serialize(other.Data);
+#endif
                 return jsonA == jsonB;
             }
             return false;
@@ -132,5 +144,4 @@ namespace SnapshotManager.Models
         /// <inheritdoc />
         public override string ToString() => Data?.ToString() ?? "null";
     }
-#endif
 }
