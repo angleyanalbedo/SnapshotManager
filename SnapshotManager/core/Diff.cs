@@ -350,4 +350,48 @@ namespace SnapshotManager.Core
             return root;
         }
     }
+
+    // --- Element Wrappers Diffs ---
+
+    public class PrimitiveListElementDiff<T> : IDiff<PrimitiveListElement<T>>
+    {
+        private readonly ListDiff<T> _internalDiff;
+        public PrimitiveListElementDiff()
+        {
+            _internalDiff = new ListDiff<T>(new BasicDiff<T>());
+        }
+
+        public DiffNode Diff(PrimitiveListElement<T>? oldValue, PrimitiveListElement<T>? newValue)
+        {
+            return _internalDiff.Diff(oldValue?.Items, newValue?.Items);
+        }
+    }
+
+    public class DictionaryElementDiff<K, V> : IDiff<DictionaryElement<K, V>>
+    {
+        private readonly DictionaryDiff<K, V> _internalDiff;
+        public DictionaryElementDiff()
+        {
+            _internalDiff = new DictionaryDiff<K, V>(new BasicDiff<V>());
+        }
+
+        public DiffNode Diff(DictionaryElement<K, V>? oldValue, DictionaryElement<K, V>? newValue)
+        {
+            return _internalDiff.Diff(oldValue?.Map, newValue?.Map);
+        }
+    }
+
+    public class MatrixElementDiff : IDiff<MatrixElement>
+    {
+        private readonly MatrixDiff<ElementBase> _internalDiff;
+        public MatrixElementDiff()
+        {
+            _internalDiff = new MatrixDiff<ElementBase>(new ElementDiff());
+        }
+
+        public DiffNode Diff(MatrixElement? oldValue, MatrixElement? newValue)
+        {
+            return _internalDiff.Diff(oldValue?.Rows, newValue?.Rows);
+        }
+    }
 }

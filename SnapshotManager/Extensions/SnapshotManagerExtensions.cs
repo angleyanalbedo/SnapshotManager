@@ -20,6 +20,7 @@ namespace SnapshotManager.Extensions
         /// <param name="printer">可选的差异打印器。如果为 null，默认使用 ConsoleDiffPrinter。</param>
         public static void DiffAndPrint<TSnapshot, TModel>(this ISnapshotManager<TSnapshot, TModel> manager, string snapA, string snapB, IDiffPrinter? printer = null)
             where TSnapshot : Snapshot<TModel>
+            where TModel : ElementBase
         {
             var diffNode = manager.Diff(snapA, snapB);
             printer ??= new ConsoleDiffPrinter();
@@ -37,6 +38,7 @@ namespace SnapshotManager.Extensions
         /// <param name="printer">可选的差异打印器。如果为 null，默认使用 ConsoleDiffPrinter。</param>
         public static void DiffWithAndPrint<TSnapshot, TModel>(this ISnapshotManager<TSnapshot, TModel> manager, string baseSnapKey, TModel currentData, IDiffPrinter? printer = null)
             where TSnapshot : Snapshot<TModel>
+            where TModel : ElementBase
         {
             var diffNode = manager.DiffWith(baseSnapKey, currentData);
             printer ??= new ConsoleDiffPrinter();
@@ -55,6 +57,7 @@ namespace SnapshotManager.Extensions
         /// <returns>格式化后的差异字符串。</returns>
         public static string DiffAndFormat<TSnapshot, TModel>(this ISnapshotManager<TSnapshot, TModel> manager, string snapA, string snapB, IDiffFormatter? formatter = null)
             where TSnapshot : Snapshot<TModel>
+            where TModel : ElementBase
         {
             var diffNode = manager.Diff(snapA, snapB);
             formatter ??= new StringDiffFormatter();
@@ -73,6 +76,7 @@ namespace SnapshotManager.Extensions
         /// <returns>格式化后的差异字符串。</returns>
         public static string DiffWithAndFormat<TSnapshot, TModel>(this ISnapshotManager<TSnapshot, TModel> manager, string baseSnapKey, TModel currentData, IDiffFormatter? formatter = null)
             where TSnapshot : Snapshot<TModel>
+            where TModel : ElementBase
         {
             var diffNode = manager.DiffWith(baseSnapKey, currentData);
             formatter ??= new StringDiffFormatter();

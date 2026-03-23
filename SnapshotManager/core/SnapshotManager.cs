@@ -14,6 +14,7 @@ namespace SnapshotManager.Core
     /// <typeparam name="TModel">被管理的数据模型类型。</typeparam>
     public class SnapshotManager<TSnapshot, TModel> : ISnapshotManager<TSnapshot, TModel>
         where TSnapshot : Snapshot<TModel>
+        where TModel : ElementBase
     {
         private readonly Dictionary<string, TSnapshot> _history =
             new(StringComparer.OrdinalIgnoreCase);
@@ -146,18 +147,13 @@ namespace SnapshotManager.Core
     public static class ElementSnapshotManagerFactory
     {
         /// <summary>
-        /// 创建一个预配置的管理器，用于处理 List&lt;List&lt;ElementBase&gt;&gt; 类型的数据。
-        /// <para>已内置 MatrixDiff 和 ElementDiff 算法。</para>
+        /// 创建一个预配置的管理器，用于处理 MatrixElement 类型的数据。
         /// </summary>
         /// <returns>配置好的 SnapshotManager 实例。</returns>
-        public static SnapshotManager<ElementArraySnapshot, List<List<ElementBase>>> Create()
+        public static SnapshotManager<ElementArraySnapshot, MatrixElement> Create()
         {
-            // 组装：MatrixDiff -> ElementDiff
-            var elementDiff = new ElementDiff();
-            var matrixDiff = new MatrixDiff<ElementBase>(elementDiff);
-
-            return new SnapshotManager<ElementArraySnapshot, List<List<ElementBase>>>(
-                matrixDiff, 
+            return new SnapshotManager<ElementArraySnapshot, MatrixElement>(
+                new MatrixElementDiff(), 
                 (key, data) => new ElementArraySnapshot(key, "Auto Generated Snapshot", data)
             );
         }
@@ -167,11 +163,11 @@ namespace SnapshotManager.Core
     /// 针对基础类型列表（如 List&lt;int&gt;）的专用管理器。
     /// </summary>
     /// <typeparam name="T">基础数据类型。</typeparam>
-    public class PrimitiveListSnapshotManager<T> : SnapshotManager<PrimitiveListSnapshot<T>, List<T>>
+    public class PrimitiveListSnapshotManager<T> : SnapshotManager<PrimitiveListSnapshot<T>, PrimitiveListElement<T>>
     {
         public PrimitiveListSnapshotManager()
             : base(
-                  new ListDiff<T>(new BasicDiff<T>()),
+                  new PrimitiveListElementDiff<T>(),
                   (key, data) => new PrimitiveListSnapshot<T>(key, "Auto Generated", data))
         {
         }
@@ -182,11 +178,11 @@ namespace SnapshotManager.Core
     /// </summary>
     /// <typeparam name="K">键类型。</typeparam>
     /// <typeparam name="V">值类型（假定为基础类型）。</typeparam>
-    public class DictionarySnapshotManager<K, V> : SnapshotManager<DictionarySnapshot<K, V>, Dictionary<K, V>>
+    public class DictionarySnapshotManager<K, V> : SnapshotManager<DictionarySnapshot<K, V>, DictionaryElement<K, V>>
     {
         public DictionarySnapshotManager()
             : base(
-                  new DictionaryDiff<K, V>(new BasicDiff<V>()),
+                  new DictionaryElementDiff<K, V>(),
                   (key, data) => new DictionarySnapshot<K, V>(key, "Auto Generated", data))
         {
         }

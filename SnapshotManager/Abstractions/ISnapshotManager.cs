@@ -11,9 +11,10 @@ namespace SnapshotManager.Abstruactions
     /// 定义了快照的存储、检索以及差异对比的核心功能。
     /// </summary>
     /// <typeparam name="TSnapshot">具体的快照类型。</typeparam>
-    /// <typeparam name="TModel">被管理的数据模型类型。</typeparam>
+    /// <typeparam name="TModel">被管理的数据模型类型，必须继承自 ElementBase。</typeparam>
     public interface ISnapshotManager<TSnapshot, TModel>
         where TSnapshot : Snapshot<TModel>
+        where TModel : ElementBase
     {
         /// <summary>
         /// 添加一个已构建的快照对象。

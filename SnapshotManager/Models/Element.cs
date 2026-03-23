@@ -143,4 +143,69 @@ namespace SnapshotManager.Models
         /// <inheritdoc />
         public override string ToString() => Data?.ToString() ?? "null";
     }
+
+    /// <summary>
+    /// 基础类型列表的 Element 包装器。
+    /// </summary>
+    /// <typeparam name="T">基础类型。</typeparam>
+    public class PrimitiveListElement<T> : ElementBase
+    {
+        public List<T> Items { get; set; }
+
+        public PrimitiveListElement(List<T> items)
+        {
+            Items = items ?? new List<T>();
+        }
+
+        public override ElementBase DeepClone()
+        {
+            return new PrimitiveListElement<T>(new List<T>(Items));
+        }
+    }
+
+    /// <summary>
+    /// 字典类型的 Element 包装器。
+    /// </summary>
+    public class DictionaryElement<K, V> : ElementBase
+    {
+        public Dictionary<K, V> Map { get; set; }
+
+        public DictionaryElement(Dictionary<K, V> map)
+        {
+            Map = map ?? new Dictionary<K, V>();
+        }
+
+        public override ElementBase DeepClone()
+        {
+            return new DictionaryElement<K, V>(new Dictionary<K, V>(Map));
+        }
+    }
+
+    /// <summary>
+    /// ElementBase 二维矩阵的包装器。
+    /// </summary>
+    public class MatrixElement : ElementBase
+    {
+        public List<List<ElementBase>> Rows { get; set; }
+
+        public MatrixElement(List<List<ElementBase>> rows)
+        {
+            Rows = rows ?? new List<List<ElementBase>>();
+        }
+
+        public override ElementBase DeepClone()
+        {
+            var newRows = new List<List<ElementBase>>(Rows.Count);
+            foreach (var row in Rows)
+            {
+                var newRow = new List<ElementBase>(row.Count);
+                foreach (var item in row)
+                {
+                    newRow.Add(item.DeepClone());
+                }
+                newRows.Add(newRow);
+            }
+            return new MatrixElement(newRows);
+        }
+    }
 }
