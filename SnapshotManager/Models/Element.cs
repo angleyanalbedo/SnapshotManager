@@ -65,8 +65,16 @@ namespace SnapshotManager.Models
         /// <inheritdoc />
         public override string ToString() => Value?.ToString() ?? "null";
 
-        // 隐式转换，让使用更方便
+        /// <summary>
+        /// 隐式转换为内部值类型。
+        /// </summary>
+        /// <param name="element">包装元素。</param>
         public static implicit operator T(ValueElement<T> element) => element.Value;
+
+        /// <summary>
+        /// 从值类型隐式转换为包装元素。
+        /// </summary>
+        /// <param name="value">原始值。</param>
         public static implicit operator ValueElement<T>(T value) => new ValueElement<T>(value);
     }
 
