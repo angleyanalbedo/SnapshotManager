@@ -28,6 +28,7 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
   <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
     <PackageReference Include="System.Text.Json" Version="10.0.5" Condition="('$(TargetFrameworkIdentifier)' == '.NETFramework' and '$(TargetFramework)' != 'net45') or '$(TargetFramework)' == 'netstandard2.0'" />
   </ItemGroup>
   <ItemGroup>
