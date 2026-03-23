@@ -12,39 +12,33 @@ namespace SnapshotManager.core
             new(StringComparer.OrdinalIgnoreCase);
 
         private readonly Func<T?, T?, DiffNode>? _diffFunc;
-        private readonly Func<T?, T?, DiffResult>? _compareFunc;
 
-        // 构造函数，自动适配 IDiff<T>
+        // 构造函数 1: 尝试从 T 自身获取 IDiff 实现
         public SnapshotManager()
         {
             if (typeof(IDiff<T>).IsAssignableFrom(typeof(T)))
             {
                 _diffFunc = (oldVal, newVal) =>
                 {
-                    var diffObj = oldVal ?? newVal; // 任一非 null 实例用于调用 Diff
+                    var diffObj = oldVal ?? newVal;
                     if (diffObj == null)
                         return new DiffNode { Name = typeof(T).Name, Type = DiffType.None };
 
                     return ((IDiff<T>)diffObj).Diff(oldVal, newVal);
                 };
             }
-            // else _diffFunc remains null and will be checked on usage
         }
+
+        // 构造函数 2: 注入比较委托
         public SnapshotManager(Func<T?, T?, DiffNode> diffFunc)
         {
             _diffFunc = diffFunc;
         }
 
-        // 接受 IDiff<T>
+        // 构造函数 3: 注入比较器对象
         public SnapshotManager(IDiff<T> diffObj)
         {
             _diffFunc = diffObj.Diff;
-        }
-
-        // 接受 ICompare<T>
-        public SnapshotManager(ICompare<T> compareObj)
-        {
-           _compareFunc = compareObj.Compare;
         }
 
 
@@ -56,7 +50,9 @@ namespace SnapshotManager.core
 
         public Snapshot<T> GetSnapshot(string name)
         {
-            return _history[name];
+            if (!_history.TryGetValue(name, out var snap))
+                throw new KeyNotFoundException($"Snapshot '{name}' not found.");
+            return snap;
         }
 
         public void AddSnapshot(string key, Snapshot<T> snapshot)
@@ -69,6 +65,7 @@ namespace SnapshotManager.core
             return _history.Values.OrderBy(s => s.TimeStamp);
         }
 
+        // 统一后的 Diff 方法
         public DiffNode Diff(string snapA, string snapB)
         {
             if (_diffFunc is null)
@@ -79,28 +76,18 @@ namespace SnapshotManager.core
 
             return _diffFunc(a, b);
         }
-        public DiffNode CompareSnapshots(string oldKey, string newKey)
-        {
-            if (_diffFunc is null)
-                throw new InvalidOperationException("Diff function is not configured for this manager.");
-
-            if (!_history.TryGetValue(oldKey, out var oldSnap) ||
-                !_history.TryGetValue(newKey, out var newSnap))
-            {
-                throw new ArgumentException("指定的快照不存在");
-            }
-
-            return _diffFunc(oldSnap.Data, newSnap.Data);
-        }
     }
 
+    // 工厂类更新：使用组合模式构建 Diff 逻辑
     public static class ElementSnapshotManagerFactory
     {
         public static SnapshotManager<List<List<ElementBase>>> Create()
         {
-            return new SnapshotManager<List<List<ElementBase>>>(
-                (oldArr, newArr) => new ElementArrayDiff().Diff(oldArr, newArr)
-            );
+            // 组装：MatrixDiff -> ElementDiff
+            var elementDiff = new ElementDiff();
+            var matrixDiff = new MatrixDiff<ElementBase>(elementDiff);
+
+            return new SnapshotManager<List<List<ElementBase>>>(matrixDiff);
         }
     }
 
