@@ -80,11 +80,10 @@ namespace SnapshotManager.Models
         public static implicit operator ValueElement<T>(T value) => new ValueElement<T>(value);
     }
 
-#if !NET45
     /// <summary>
     /// 基于 JSON 序列化的通用对象包装器。
     /// 适用于不想手动实现 DeepClone 的复杂对象（POCO）。
-    /// 注意：性能低于手写 DeepClone，且依赖 System.Text.Json。
+    /// 注意：性能低于手写 DeepClone，且依赖 System.Text.Json (或 Newtonsoft.Json)。
     /// </summary>
     /// <typeparam name="T">对象类型。</typeparam>
     public class JsonElement<T> : ElementBase
