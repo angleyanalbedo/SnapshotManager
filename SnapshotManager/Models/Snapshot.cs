@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using SnapshotManager.core.@interface;
+using SnapshotManager.Abstruactions;
 
-namespace SnapshotManager.core
+namespace SnapshotManager.Models
 {
     /// <summary>
     /// 快照基类。

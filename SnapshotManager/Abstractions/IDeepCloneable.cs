@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace SnapshotManager.core.@interface
+namespace SnapshotManager.Abstruactions
 {
     /// <summary>
     /// 深拷贝接口。

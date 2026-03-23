@@ -1,8 +1,8 @@
-﻿using SnapshotManager.core.@interface;
+﻿using SnapshotManager.Abstruactions;
 using System;
 using System.Text;
 
-namespace SnapshotManager.core
+namespace SnapshotManager.Core
 {
     // 1. 控制台打印机
     /// <summary>

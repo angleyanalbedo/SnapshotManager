@@ -1,6 +1,6 @@
-﻿using SnapshotManager.core;
+﻿using SnapshotManager.Core;
 
-namespace SnapshotManager.core.@interface
+namespace SnapshotManager.Abstruactions
 {
     /// <summary>
     /// 差异打印机接口。

@@ -1,4 +1,5 @@
-﻿using SnapshotManager.core.@interface;
+﻿using SnapshotManager.Abstruactions;
+using SnapshotManager.Models;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -6,7 +7,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 
-namespace SnapshotManager.core
+namespace SnapshotManager.Core
 {
     /// <summary>
     /// 树状 Diff 结果

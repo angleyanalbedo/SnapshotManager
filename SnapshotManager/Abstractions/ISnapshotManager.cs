@@ -1,8 +1,10 @@
-﻿using System;
+﻿using SnapshotManager.Core;
+using SnapshotManager.Models;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace SnapshotManager.core.@interface
+namespace SnapshotManager.Abstruactions
 {
     /// <summary>
     /// 快照管理器接口。

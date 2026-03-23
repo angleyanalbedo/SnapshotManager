@@ -1,4 +1,4 @@
-﻿using SnapshotManager.core.@interface;
+﻿using SnapshotManager.Abstruactions;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -6,7 +6,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 
-namespace SnapshotManager.core
+namespace SnapshotManager.Models
 {
     /// <summary>
     /// 数据元素基类。
