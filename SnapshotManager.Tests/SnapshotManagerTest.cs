@@ -4,7 +4,8 @@ using Xunit.Abstractions;
 using System.Collections.Generic;
 using Xunit;
 using System.Linq;
-using System; // 添加 System 引用
+using System;
+using SnapshotManager.Model; // 添加 System 引用
 
 namespace SnapshotManager.Tests
 {
