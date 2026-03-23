@@ -1,27 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using SnapshotManager.core;
 
 namespace SnapshotManager.core.@interface
 {
     public interface IDiffPrinter
     {
-        void Print(DiffResult result);
+        void Print(DiffNode node);
     }
 
-    public interface IDiffNodePrinter
+    public interface IDiffFormatter
     {
-        void Print(DiffNode result);
+        string Format(DiffNode node);
     }
-
-    public interface IDiffResultFormatter
-    {
-        string Format(DiffResult result);
-    }
-
-    public interface IDiffNodeFormatter
-    {
-        string Format(DiffNode result);
-    }
-
 }

@@ -7,6 +7,9 @@ namespace SnapshotManager.core.@interface
     public interface ISnapshotManager<T>
     {
         void AddSnapshot(Snapshot<T> snapshot);
+        
+        // 添加缺失的重载
+        void AddSnapshot(string key, Snapshot<T> snapshot);
 
         Snapshot<T> GetSnapshot(string name);
 

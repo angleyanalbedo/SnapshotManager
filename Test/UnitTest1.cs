@@ -35,7 +35,7 @@ namespace Test
 
             var snapshot1 = new ElementArraySnapshot("snapshot1", "初始状态", elements);
 
-            // 修改元素生成新快照
+            // 修改元素生成新快照 (注意：这里为了演示直接修改了引用，实际场景建议 DeepClone)
             elements[0][0] = new MyElement { Value = 10 };
             var snapshot2 = new ElementArraySnapshot("snapshot2", "修改后状态", elements);
 
@@ -44,12 +44,12 @@ namespace Test
             manager.AddSnapshot("s1", snapshot1);
             manager.AddSnapshot("s2", snapshot2);
 
-            // 对比快照
-            var diff = manager.CompareSnapshots("s1", "s2");
-            var printer = new StringDiffNodePrinter();
-            _output.WriteLine(printer.Format(diff));
-
-
+            // 对比快照 (使用 Diff 而不是 CompareSnapshots)
+            var diffNode = manager.Diff("s1", "s2");
+            
+            // 使用格式化器输出
+            var formatter = new StringDiffFormatter();
+            _output.WriteLine(formatter.Format(diffNode));
         }
     }
 }
