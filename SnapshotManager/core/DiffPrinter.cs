@@ -5,8 +5,13 @@ using System.Text;
 namespace SnapshotManager.core
 {
     // 1. 控制台打印机
+    /// <summary>
+    /// 控制台差异打印机。
+    /// 将差异树以彩色文本形式输出到控制台。
+    /// </summary>
     public class ConsoleDiffPrinter : IDiffPrinter
     {
+        /// <inheritdoc />
         public void Print(DiffNode node)
         {
             PrintNode(node, 0);
@@ -52,8 +57,13 @@ namespace SnapshotManager.core
     }
 
     // 2. 字符串格式化器 (用于日志或测试)
+    /// <summary>
+    /// 字符串差异格式化器。
+    /// 将差异树格式化为缩进的字符串。
+    /// </summary>
     public class StringDiffFormatter : IDiffFormatter
     {
+        /// <inheritdoc />
         public string Format(DiffNode node)
         {
             var sb = new StringBuilder();

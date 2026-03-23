@@ -13,36 +13,80 @@ namespace SnapshotManager.core
     /// </summary>
     public class DiffNode
     {
+        /// <summary>
+        /// 节点名称（如属性名、索引等）。
+        /// </summary>
         public string Name { get; set; } = "";
+
+        /// <summary>
+        /// 差异类型（新增、删除、修改、无变化）。
+        /// </summary>
         public DiffType Type { get; set; } = DiffType.None;
 
+        /// <summary>
+        /// 原始值。
+        /// </summary>
         public object? OldValue { get; set; }
+
+        /// <summary>
+        /// 新值。
+        /// </summary>
         public object? NewValue { get; set; }
 
+        /// <summary>
+        /// 子节点列表（用于表示嵌套结构的差异）。
+        /// </summary>
         public List<DiffNode> Children { get; set; } = new();
 
+        /// <summary>
+        /// 检查当前节点或其子节点是否存在差异。
+        /// </summary>
         public bool HasDifference =>
             Type != DiffType.None || Children.Any(c => c.HasDifference);
     }
 
+    /// <summary>
+    /// 差异类型枚举。
+    /// </summary>
     public enum DiffType
     {
+        /// <summary>
+        /// 无变化。
+        /// </summary>
         None,
+        /// <summary>
+        /// 新增。
+        /// </summary>
         Added,
+        /// <summary>
+        /// 移除。
+        /// </summary>
         Removed,
+        /// <summary>
+        /// 修改。
+        /// </summary>
         Modified
     }
 
 
+    /// <summary>
+    /// 列表差异比较器。
+    /// </summary>
+    /// <typeparam name="T">列表元素类型。</typeparam>
     public class ListDiff<T> : IDiff<List<T>>
     {
         private readonly IDiff<T> _elementDiff;
 
+        /// <summary>
+        /// 初始化列表差异比较器。
+        /// </summary>
+        /// <param name="elementDiff">元素比较器。</param>
         public ListDiff(IDiff<T> elementDiff)
         {
             _elementDiff = elementDiff;
         }
 
+        /// <inheritdoc />
         public DiffNode Diff(List<T>? oldList, List<T>? newList)
         {
             var root = new DiffNode { Name = "List" };
@@ -82,6 +126,9 @@ namespace SnapshotManager.core
             return root;
         }
     }
+    /// <summary>
+    /// 基于反射的 ElementBase 差异比较器。
+    /// </summary>
     public class ElementDiff : IDiff<ElementBase>
     {
         private static readonly ConcurrentDictionary<Type, PropertyInfo[]> _propertyCache = new();
@@ -136,15 +183,24 @@ namespace SnapshotManager.core
         }
     }
 
+    /// <summary>
+    /// 二维矩阵差异比较器。
+    /// </summary>
+    /// <typeparam name="T">矩阵元素类型。</typeparam>
     public class MatrixDiff<T> : IDiff<List<List<T>>>
     {
         private readonly IDiff<T> _elementDiff;
 
+        /// <summary>
+        /// 初始化矩阵差异比较器。
+        /// </summary>
+        /// <param name="elementDiff">元素比较器。</param>
         public MatrixDiff(IDiff<T> elementDiff)
         {
             _elementDiff = elementDiff;
         }
 
+        /// <inheritdoc />
         public DiffNode Diff(List<List<T>>? oldMatrix, List<List<T>>? newMatrix)
         {
             var root = new DiffNode { Name = "Matrix" };

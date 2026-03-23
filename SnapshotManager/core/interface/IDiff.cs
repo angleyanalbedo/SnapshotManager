@@ -9,6 +9,12 @@ namespace SnapshotManager.core.@interface
     /// </summary>
     public interface IDiff<T>
     {
+        /// <summary>
+        /// 比较两个对象并生成差异树。
+        /// </summary>
+        /// <param name="oldValue">旧值。</param>
+        /// <param name="newValue">新值。</param>
+        /// <returns>差异节点。</returns>
         DiffNode Diff(T? oldValue, T? newValue);
     }
 }
