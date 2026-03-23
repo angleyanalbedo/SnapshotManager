@@ -57,6 +57,26 @@ public class MyItem : ElementBase
 }
 ```
 
+### 1.1 使用内置包装器 (无需继承)
+
+如果你不想创建新的类，可以直接使用内置的通用包装器：
+
+*   **ValueElement&lt;T&gt;**: 用于 `int`, `string`, `double` 等基础类型。
+*   **JsonElement&lt;T&gt;**: 用于任意 POCO 对象（自动通过 JSON 序列化实现深拷贝，需 .NET 4.5+）。
+
+```csharp
+// 使用 ValueElement (支持隐式转换)
+var list = new List<ElementBase> 
+{ 
+    new ValueElement<int>(100),
+    new ValueElement<string>("Hello")
+};
+
+// 使用 JsonElement (包装任意对象)
+var user = new User { Name = "Tom", Age = 18 };
+var element = new JsonElement<User>(user); 
+```
+
 ### 2. 初始化管理器
 
 你可以使用工厂方法创建一个专门管理二维元素矩阵的管理器，或者直接实例化泛型管理器。
