@@ -12,10 +12,16 @@ namespace SnapshotManager.core
             new(StringComparer.OrdinalIgnoreCase);
 
         private readonly Func<T?, T?, DiffNode>? _diffFunc;
+        
+        // [新增] 用于将数据包装为 Snapshot 的工厂委托
+        private readonly Func<T, Snapshot<T>>? _snapshotFactory;
 
         // 构造函数 1: 尝试从 T 自身获取 IDiff 实现
-        public SnapshotManager()
+        // [修改] 增加可选的 snapshotFactory 参数
+        public SnapshotManager(Func<T, Snapshot<T>>? snapshotFactory = null)
         {
+            _snapshotFactory = snapshotFactory;
+
             if (typeof(IDiff<T>).IsAssignableFrom(typeof(T)))
             {
                 _diffFunc = (oldVal, newVal) =>
@@ -30,22 +36,31 @@ namespace SnapshotManager.core
         }
 
         // 构造函数 2: 注入比较委托
-        public SnapshotManager(Func<T?, T?, DiffNode> diffFunc)
+        // [修改] 增加可选的 snapshotFactory 参数
+        public SnapshotManager(Func<T?, T?, DiffNode> diffFunc, Func<T, Snapshot<T>>? snapshotFactory = null)
         {
             _diffFunc = diffFunc;
+            _snapshotFactory = snapshotFactory;
         }
 
         // 构造函数 3: 注入比较器对象
-        public SnapshotManager(IDiff<T> diffObj)
+        // [修改] 增加可选的 snapshotFactory 参数
+        public SnapshotManager(IDiff<T> diffObj, Func<T, Snapshot<T>>? snapshotFactory = null)
         {
             _diffFunc = diffObj.Diff;
+            _snapshotFactory = snapshotFactory;
         }
 
 
 
         public void AddSnapshot(Snapshot<T> snapshot)
         {
-            _history[snapshot.Name] = snapshot;
+            // 如果 snapshot 没有名字，自动生成一个
+            var key = string.IsNullOrEmpty(snapshot.Name) 
+                ? DateTime.Now.ToString("yyyyMMdd_HHmmss_fff") 
+                : snapshot.Name;
+            
+            _history[key] = snapshot;
         }
 
         public Snapshot<T> GetSnapshot(string name)
@@ -57,6 +72,26 @@ namespace SnapshotManager.core
 
         public void AddSnapshot(string key, Snapshot<T> snapshot)
         {
+            _history[key] = snapshot;
+        }
+
+        // [新增] 实现 TakeSnapshot (自动 Key)
+        public string TakeSnapshot(T data)
+        {
+            var key = DateTime.Now.ToString("yyyyMMdd_HHmmss_fff");
+            TakeSnapshot(key, data);
+            return key;
+        }
+
+        // [新增] 实现 TakeSnapshot (指定 Key)
+        public void TakeSnapshot(string key, T data)
+        {
+            if (_snapshotFactory == null)
+                throw new InvalidOperationException("Snapshot factory is not configured. Cannot create snapshot from data directly.");
+
+            var snapshot = _snapshotFactory(data);
+            // 确保 snapshot 内部也持有这个 key (如果 Snapshot 类有 Name 属性的话)
+            // 这里我们主要依赖 _history 的 key
             _history[key] = snapshot;
         }
 
@@ -76,6 +111,16 @@ namespace SnapshotManager.core
 
             return _diffFunc(a, b);
         }
+
+        // [新增] 实现 DiffWith (快照 vs 数据)
+        public DiffNode DiffWith(string baseSnapKey, T currentData)
+        {
+            if (_diffFunc is null)
+                throw new InvalidOperationException("Diff function is not configured for this manager.");
+
+            var baseData = GetSnapshot(baseSnapKey).Data;
+            return _diffFunc(baseData, currentData);
+        }
     }
 
     // 工厂类更新：使用组合模式构建 Diff 逻辑
@@ -87,7 +132,11 @@ namespace SnapshotManager.core
             var elementDiff = new ElementDiff();
             var matrixDiff = new MatrixDiff<ElementBase>(elementDiff);
 
-            return new SnapshotManager<List<List<ElementBase>>>(matrixDiff);
+            // [修改] 注入 Snapshot 的创建逻辑 (ElementArraySnapshot)
+            return new SnapshotManager<List<List<ElementBase>>>(
+                matrixDiff, 
+                data => new ElementArraySnapshot(data)
+            );
         }
     }
 
