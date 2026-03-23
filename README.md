@@ -152,3 +152,20 @@ var myManager = new SnapshotManager<MyComplexData>(
 *   **Snapshot**: 数据的容器。它会在内部深拷贝一份数据，防止外部修改影响历史记录。
 *   **DiffNode**: 差异树节点。包含差异类型（Added/Removed/Modified）、旧值、新值以及子节点。
 *   **ElementBase**: 所有数据项的基类，强制要求实现深拷贝。
+
+---
+
+## 📦 打包与发布
+
+在 .NET 项目中，我们使用 `dotnet pack` 命令来生成 NuGet 包。请在终端（Terminal）中运行以下命令：
+
+```bash
+dotnet pack -c Release
+```
+
+### 命令说明：
+*   `dotnet pack`: 执行打包操作。
+*   `-c Release`: 使用 `Release` 配置进行构建（优化代码，移除调试符号），这是发布正式包的标准做法。
+
+### 预期结果：
+命令执行成功后，你会在 `SnapshotManager\bin\Release\` 目录下看到生成的 `.nupkg` 文件（例如 `SnapshotManager.1.1.3.nupkg`）。你可以将该文件上传到 NuGet.org 或私有源。
