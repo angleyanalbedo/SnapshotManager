@@ -5,7 +5,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+#if !NET45
 using System.Text.Json;
+#endif
 
 namespace SnapshotManager.Models
 {
@@ -68,6 +70,7 @@ namespace SnapshotManager.Models
         public static implicit operator ValueElement<T>(T value) => new ValueElement<T>(value);
     }
 
+#if !NET45
     /// <summary>
     /// 基于 JSON 序列化的通用对象包装器。
     /// 适用于不想手动实现 DeepClone 的复杂对象（POCO）。
@@ -121,4 +124,5 @@ namespace SnapshotManager.Models
         /// <inheritdoc />
         public override string ToString() => Data?.ToString() ?? "null";
     }
+#endif
 }
