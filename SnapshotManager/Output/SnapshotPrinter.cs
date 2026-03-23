@@ -26,11 +26,13 @@ namespace SnapshotManager.Output
     /// </summary>
     public class ConsoleSnapshotPrinter : ISnapshotPrinter
     {
+        /// <inheritdoc />
         public void Print(ElementBase element)
         {
             Console.WriteLine(SnapshotFormatter.Format(element));
         }
 
+        /// <inheritdoc />
         public void Print<T>(Snapshot<T> snapshot) where T : ElementBase
         {
             Console.WriteLine(SnapshotFormatter.Format(snapshot));
@@ -55,11 +57,13 @@ namespace SnapshotManager.Output
         /// </summary>
         public void Clear() => _sb.Clear();
 
+        /// <inheritdoc />
         public void Print(ElementBase element)
         {
             _sb.AppendLine(SnapshotFormatter.Format(element));
         }
 
+        /// <inheritdoc />
         public void Print<T>(Snapshot<T> snapshot) where T : ElementBase
         {
             _sb.AppendLine(SnapshotFormatter.Format(snapshot));
@@ -122,14 +126,17 @@ namespace SnapshotManager.Output
                 if (genericDef == typeof(PrimitiveListElement<>))
                 {
                     var itemsProp = type.GetProperty("Items");
-                    var items = (IEnumerable)itemsProp.GetValue(element);
+                    var items = (IEnumerable?)itemsProp?.GetValue(element);
                     var count = (items as ICollection)?.Count ?? 0;
 
                     sb.AppendLine($"{indent}List ({count} items):");
                     int idx = 0;
-                    foreach (var item in items)
+                    if (items != null)
                     {
-                        sb.AppendLine($"{indent}  [{idx++}]: {item}");
+                        foreach (var item in items)
+                        {
+                            sb.AppendLine($"{indent}  [{idx++}]: {item}");
+                        }
                     }
                     return sb.ToString().TrimEnd();
                 }
@@ -138,12 +145,15 @@ namespace SnapshotManager.Output
                 if (genericDef == typeof(DictionaryElement<,>))
                 {
                     var mapProp = type.GetProperty("Map");
-                    var map = (IDictionary)mapProp.GetValue(element);
+                    var map = (IDictionary?)mapProp?.GetValue(element);
 
-                    sb.AppendLine($"{indent}Dictionary ({map.Count} items):");
-                    foreach (DictionaryEntry entry in map)
+                    sb.AppendLine($"{indent}Dictionary ({map?.Count ?? 0} items):");
+                    if (map != null)
                     {
-                        sb.AppendLine($"{indent}  [{entry.Key}]: {entry.Value}");
+                        foreach (DictionaryEntry entry in map)
+                        {
+                            sb.AppendLine($"{indent}  [{entry.Key}]: {entry.Value}");
+                        }
                     }
                     return sb.ToString().TrimEnd();
                 }
@@ -152,16 +162,23 @@ namespace SnapshotManager.Output
                 if (genericDef == typeof(HashSetElement<>))
                 {
                     var setProp = type.GetProperty("Set");
-                    var set = (IEnumerable)setProp.GetValue(element);
+                    var set = (IEnumerable?)setProp?.GetValue(element);
                     
                     // 反射获取 Count
-                    var countProp = set.GetType().GetProperty("Count");
-                    var count = (int)(countProp?.GetValue(set) ?? 0);
+                    var count = 0;
+                    if (set != null)
+                    {
+                        var countProp = set.GetType().GetProperty("Count");
+                        count = (int)(countProp?.GetValue(set) ?? 0);
+                    }
 
                     sb.AppendLine($"{indent}HashSet ({count} items):");
-                    foreach (var item in set)
+                    if (set != null)
                     {
-                        sb.AppendLine($"{indent}  - {item}");
+                        foreach (var item in set)
+                        {
+                            sb.AppendLine($"{indent}  - {item}");
+                        }
                     }
                     return sb.ToString().TrimEnd();
                 }
@@ -170,7 +187,7 @@ namespace SnapshotManager.Output
                 if (genericDef == typeof(ValueElement<>))
                 {
                     var valProp = type.GetProperty("Value");
-                    var val = valProp.GetValue(element);
+                    var val = valProp?.GetValue(element);
                     return $"{indent}{val}";
                 }
             }

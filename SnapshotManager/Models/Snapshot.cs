@@ -108,6 +108,7 @@ namespace SnapshotManager.Models
     /// <typeparam name="K">键类型。</typeparam>
     /// <typeparam name="V">值类型。</typeparam>
     public class DictionarySnapshot<K, V> : Snapshot<DictionaryElement<K, V>>
+        where K : notnull
     {
         /// <summary>
         /// 创建字典快照。

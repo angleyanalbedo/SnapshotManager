@@ -272,7 +272,7 @@ namespace SnapshotManager.Core
         {
             var node = new DiffNode { Name = typeof(T).Name };
 
-            if (!EqualityComparer<T>.Default.Equals(oldValue, newValue))
+            if (!EqualityComparer<T>.Default.Equals(oldValue!, newValue!))
             {
                 node.Type = DiffType.Modified;
                 node.OldValue = oldValue;
@@ -289,6 +289,7 @@ namespace SnapshotManager.Core
     /// <typeparam name="K">键类型。</typeparam>
     /// <typeparam name="V">值类型。</typeparam>
     public class DictionaryDiff<K, V> : IDiff<Dictionary<K, V>>
+        where K : notnull
     {
         private readonly IDiff<V> _valueDiff;
 
@@ -427,6 +428,7 @@ namespace SnapshotManager.Core
     /// <typeparam name="K">键类型。</typeparam>
     /// <typeparam name="V">值类型。</typeparam>
     public class DictionaryElementDiff<K, V> : IDiff<DictionaryElement<K, V>>
+        where K : notnull
     {
         private readonly DictionaryDiff<K, V> _internalDiff;
 

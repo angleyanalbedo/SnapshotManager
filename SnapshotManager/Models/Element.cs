@@ -175,6 +175,7 @@ namespace SnapshotManager.Models
     /// 字典类型的 Element 包装器。
     /// </summary>
     public class DictionaryElement<K, V> : ElementBase
+        where K : notnull
     {
         /// <summary>
         /// 内部存储的字典。

@@ -182,6 +182,7 @@ namespace SnapshotManager.Core
     /// <typeparam name="K">键类型。</typeparam>
     /// <typeparam name="V">值类型（假定为基础类型）。</typeparam>
     public class DictionarySnapshotManager<K, V> : SnapshotManager<DictionarySnapshot<K, V>, DictionaryElement<K, V>>
+        where K : notnull
     {
         /// <summary>
         /// 初始化字典快照管理器。
@@ -228,6 +229,7 @@ namespace SnapshotManager.Core
         /// 创建字典管理器。
         /// </summary>
         public static DictionarySnapshotManager<K, V> CreateDictionaryManager<K, V>()
+            where K : notnull
         {
             return new DictionarySnapshotManager<K, V>();
         }
