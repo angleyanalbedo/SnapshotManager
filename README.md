@@ -168,6 +168,22 @@ string diffText = listManager.DiffWithAndFormat(snapKey, new PrimitiveListElemen
 // File.WriteAllText("diff.txt", diffText);
 ```
 
+## 可视化输出 (Graphviz & Mermaid)
+
+除了文本输出，SnapshotManager 还支持生成 Graphviz DOT 和 Mermaid 流程图代码，方便集成到文档或可视化工具中。
+
+```csharp
+using SnapshotManager.Output;
+
+// 生成 Graphviz DOT 代码
+var dot = listManager.DiffWithAndFormat(snapKey, currentData, new GraphvizDiffFormatter());
+// File.WriteAllText("diff.dot", dot);
+
+// 生成 Mermaid 代码
+var mermaid = listManager.DiffWithAndFormat(snapKey, currentData, new MermaidDiffFormatter());
+Console.WriteLine(mermaid);
+```
+
 ## 📂 项目结构
 
 *   **SnapshotManager.Abstractions**: 定义核心接口 (`ISnapshotManager`, `IDiff`, `IDeepCloneable`)。

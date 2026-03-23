@@ -7,6 +7,7 @@ using System;
 using SnapshotManager.Models; // 添加 System 引用
 using SnapshotManager.Extensions;
 using SnapshotManager.Abstruactions;
+using SnapshotManager.Output;
 
 namespace SnapshotManager.Tests
 {
@@ -405,6 +406,38 @@ namespace SnapshotManager.Tests
             Assert.NotNull(snapshot);
             Assert.IsType<DictionarySnapshot<string, int>>(snapshot);
             Assert.Equal(1, snapshot.Data.Map["A"]);
+        }
+    }
+
+    public class GraphFormattersTests
+    {
+        [Fact]
+        public void GraphvizDiffFormatter_ShouldGenerateValidDot()
+        {
+            var node = new DiffNode { Name = "Root", Type = DiffType.None };
+            node.Children.Add(new DiffNode { Name = "Child", Type = DiffType.Added, NewValue = 123 });
+
+            var formatter = new GraphvizDiffFormatter();
+            var output = formatter.Format(node);
+
+            Assert.Contains("digraph DiffTree", output);
+            Assert.Contains("label=\"Root\"", output);
+            Assert.Contains("label=\"Child\\n(New: 123)\"", output);
+            Assert.Contains("fillcolor=\"#ccffcc\"", output); // Added color
+        }
+
+        [Fact]
+        public void MermaidDiffFormatter_ShouldGenerateValidMermaid()
+        {
+            var node = new DiffNode { Name = "Root", Type = DiffType.None };
+            node.Children.Add(new DiffNode { Name = "Child", Type = DiffType.Modified, OldValue = 1, NewValue = 2 });
+
+            var formatter = new MermaidDiffFormatter();
+            var output = formatter.Format(node);
+
+            Assert.Contains("graph TD", output);
+            Assert.Contains("[\"Root\"]:::none", output);
+            Assert.Contains("[\"Child<br/>1 -> 2\"]:::modified", output);
         }
     }
 }
