@@ -143,8 +143,9 @@ namespace SnapshotManager.Tests
         public void AdvancedUsage_ReadmeExample()
         {
             // 初始化管理器
-            // 这里使用了默认的反射 Diff (ElementDiff)，也可以传入自定义 IDiff 实现
+            // 显式传入比较逻辑（这里使用内置的 ElementDiff 进行反射比较）
             var userManager = new SnapshotManager<UserSnapshot, UserProfile>(
+                (a, b) => new ElementDiff().Diff(a, b),
                 (key, data) => new UserSnapshot(key, data) // 注入快照创建工厂
             );
 
