@@ -19,13 +19,12 @@
   ```
 
 * **ElementBase**
-  通用基类，实现字段级自动 Diff：
+  所有自定义元素的通用基类：
 
   ```csharp
-  public abstract class ElementBase : IDiff<ElementBase>
+  public abstract class ElementBase : IDeepCloneable<ElementBase>
   {
       public abstract ElementBase DeepClone();
-      public virtual DiffNode Diff(ElementBase oldValue, ElementBase newValue) { ... }
   }
   ```
 
