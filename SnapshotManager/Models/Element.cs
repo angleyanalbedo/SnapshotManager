@@ -150,13 +150,21 @@ namespace SnapshotManager.Models
     /// <typeparam name="T">基础类型。</typeparam>
     public class PrimitiveListElement<T> : ElementBase
     {
+        /// <summary>
+        /// 内部存储的列表。
+        /// </summary>
         public List<T> Items { get; set; }
 
+        /// <summary>
+        /// 初始化基础类型列表包装器。
+        /// </summary>
+        /// <param name="items">原始列表。</param>
         public PrimitiveListElement(List<T> items)
         {
             Items = items ?? new List<T>();
         }
 
+        /// <inheritdoc />
         public override ElementBase DeepClone()
         {
             return new PrimitiveListElement<T>(new List<T>(Items));
@@ -168,13 +176,21 @@ namespace SnapshotManager.Models
     /// </summary>
     public class DictionaryElement<K, V> : ElementBase
     {
+        /// <summary>
+        /// 内部存储的字典。
+        /// </summary>
         public Dictionary<K, V> Map { get; set; }
 
+        /// <summary>
+        /// 初始化字典包装器。
+        /// </summary>
+        /// <param name="map">原始字典。</param>
         public DictionaryElement(Dictionary<K, V> map)
         {
             Map = map ?? new Dictionary<K, V>();
         }
 
+        /// <inheritdoc />
         public override ElementBase DeepClone()
         {
             return new DictionaryElement<K, V>(new Dictionary<K, V>(Map));
@@ -186,13 +202,21 @@ namespace SnapshotManager.Models
     /// </summary>
     public class MatrixElement : ElementBase
     {
+        /// <summary>
+        /// 内部存储的二维列表（行）。
+        /// </summary>
         public List<List<ElementBase>> Rows { get; set; }
 
+        /// <summary>
+        /// 初始化矩阵包装器。
+        /// </summary>
+        /// <param name="rows">原始二维列表。</param>
         public MatrixElement(List<List<ElementBase>> rows)
         {
             Rows = rows ?? new List<List<ElementBase>>();
         }
 
+        /// <inheritdoc />
         public override ElementBase DeepClone()
         {
             var newRows = new List<List<ElementBase>>(Rows.Count);

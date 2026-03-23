@@ -165,6 +165,9 @@ namespace SnapshotManager.Core
     /// <typeparam name="T">基础数据类型。</typeparam>
     public class PrimitiveListSnapshotManager<T> : SnapshotManager<PrimitiveListSnapshot<T>, PrimitiveListElement<T>>
     {
+        /// <summary>
+        /// 初始化基础类型列表快照管理器。
+        /// </summary>
         public PrimitiveListSnapshotManager()
             : base(
                   new PrimitiveListElementDiff<T>(),
@@ -180,6 +183,9 @@ namespace SnapshotManager.Core
     /// <typeparam name="V">值类型（假定为基础类型）。</typeparam>
     public class DictionarySnapshotManager<K, V> : SnapshotManager<DictionarySnapshot<K, V>, DictionaryElement<K, V>>
     {
+        /// <summary>
+        /// 初始化字典快照管理器。
+        /// </summary>
         public DictionarySnapshotManager()
             : base(
                   new DictionaryElementDiff<K, V>(),

@@ -353,42 +353,69 @@ namespace SnapshotManager.Core
 
     // --- Element Wrappers Diffs ---
 
+    /// <summary>
+    /// 基础类型列表包装器的差异比较器。
+    /// </summary>
+    /// <typeparam name="T">基础数据类型。</typeparam>
     public class PrimitiveListElementDiff<T> : IDiff<PrimitiveListElement<T>>
     {
         private readonly ListDiff<T> _internalDiff;
+
+        /// <summary>
+        /// 初始化基础类型列表差异比较器。
+        /// </summary>
         public PrimitiveListElementDiff()
         {
             _internalDiff = new ListDiff<T>(new BasicDiff<T>());
         }
 
+        /// <inheritdoc />
         public DiffNode Diff(PrimitiveListElement<T>? oldValue, PrimitiveListElement<T>? newValue)
         {
             return _internalDiff.Diff(oldValue?.Items, newValue?.Items);
         }
     }
 
+    /// <summary>
+    /// 字典包装器的差异比较器。
+    /// </summary>
+    /// <typeparam name="K">键类型。</typeparam>
+    /// <typeparam name="V">值类型。</typeparam>
     public class DictionaryElementDiff<K, V> : IDiff<DictionaryElement<K, V>>
     {
         private readonly DictionaryDiff<K, V> _internalDiff;
+
+        /// <summary>
+        /// 初始化字典差异比较器。
+        /// </summary>
         public DictionaryElementDiff()
         {
             _internalDiff = new DictionaryDiff<K, V>(new BasicDiff<V>());
         }
 
+        /// <inheritdoc />
         public DiffNode Diff(DictionaryElement<K, V>? oldValue, DictionaryElement<K, V>? newValue)
         {
             return _internalDiff.Diff(oldValue?.Map, newValue?.Map);
         }
     }
 
+    /// <summary>
+    /// 矩阵包装器的差异比较器。
+    /// </summary>
     public class MatrixElementDiff : IDiff<MatrixElement>
     {
         private readonly MatrixDiff<ElementBase> _internalDiff;
+
+        /// <summary>
+        /// 初始化矩阵差异比较器。
+        /// </summary>
         public MatrixElementDiff()
         {
             _internalDiff = new MatrixDiff<ElementBase>(new ElementDiff());
         }
 
+        /// <inheritdoc />
         public DiffNode Diff(MatrixElement? oldValue, MatrixElement? newValue)
         {
             return _internalDiff.Diff(oldValue?.Rows, newValue?.Rows);
