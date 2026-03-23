@@ -25,7 +25,7 @@
 	<PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="System.Text.Json" Version="10.0.5" Condition="'$(TargetFrameworkIdentifier)' == '.NETFramework' or '$(TargetFramework)' == 'netstandard2.0'" />
+    <PackageReference Include="System.Text.Json" Version="10.0.5" Condition="('$(TargetFrameworkIdentifier)' == '.NETFramework' and '$(TargetFramework)' != 'net45') or '$(TargetFramework)' == 'netstandard2.0'" />
   </ItemGroup>
   <ItemGroup>
       <None Include="../LICENSE.txt" Pack="true" PackagePath="\" />
