@@ -72,6 +72,7 @@ namespace SnapshotManager.core
         }
     }
 
+#if !NET45
     public class JsonDiffPrinter : DiffPrinterBase
     {
         private readonly string _path;
@@ -93,6 +94,7 @@ namespace SnapshotManager.core
             File.WriteAllText(_path, json);
         }
     }
+#endif
     public class MarkdownDiffPrinter : DiffPrinterBase
     {
         private readonly string _path;

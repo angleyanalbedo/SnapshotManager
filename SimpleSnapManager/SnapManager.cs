@@ -10,7 +10,9 @@ namespace SimpleSnapManager
     using System.Collections.Generic;
     using System.Linq;
     using System.Reflection;
+#if !NET45
     using System.Text.Json;
+#endif
 
     public class SnapshotManager
     {
@@ -69,6 +71,7 @@ namespace SimpleSnapManager
             return result;
         }
 
+#if !NET45
         // 导出 JSON（可全量或某版本）
         public string ExportJson(bool allHistory = false, int version = -1)
         {
@@ -80,6 +83,7 @@ namespace SimpleSnapManager
 
             throw new Exception("ExportJson 参数错误");
         }
+#endif
 
         // 返回两版本之间的 diff
         public DiffNode DiffVersion(int a, int b)
