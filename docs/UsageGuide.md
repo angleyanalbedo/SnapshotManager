@@ -135,3 +135,57 @@ manager.DiffWithAndPrint(key, currentData);
 string diffText = manager.DiffWithAndFormat(key, currentData);
 Console.WriteLine(diffText);
 ```
+
+## 4. 核心概念详解
+
+### 4.1 ElementBase 与数据包装
+为了统一处理不同类型的数据，SnapshotManager 要求所有受管数据必须继承自 `ElementBase`。库内置了多种包装器：
+
+*   `ValueElement<T>`: 用于 int, string, bool 等简单值类型。
+*   `PrimitiveListElement<T>`: 用于 `List<int>` 等简单列表。
+*   `DictionaryElement<K,V>`: 用于 `Dictionary<string, int>` 等字典。
+*   `HashSetElement<T>`: 用于 `HashSet<int>` 等集合。
+*   `MatrixElement`: 用于 `List<List<ElementBase>>` 二维矩阵。
+*   `JsonElement<T>`: 通用包装器，使用 JSON 序列化实现深拷贝（性能较低，但方便）。
+
+### 4.2 快照 (Snapshot)
+快照是数据在特定时间点的不可变副本。
+*   **深拷贝**: 创建快照时会自动调用 `DeepClone`，确保后续修改不会影响历史快照。
+*   **元数据**: 包含名称、描述和时间戳。
+
+### 4.3 差异对比 (Diff)
+*   **Diff(snapA, snapB)**: 对比两个历史快照。
+*   **DiffWith(baseSnap, currentData)**: 对比历史快照与当前内存数据（实时监控）。
+
+## 5. 进阶：自定义 Diff 算法
+
+如果内置的反射比较或容器比较不满足需求，可以实现 `IDiff<T>` 接口。
+
+```csharp
+public class MyCustomDiff : IDiff<MyData>
+{
+    public DiffNode Diff(MyData oldVal, MyData newVal)
+    {
+        var node = new DiffNode { Name = "MyData" };
+        
+        // 自定义比较逻辑...
+        if (oldVal.Score != newVal.Score)
+        {
+            node.Children.Add(new DiffNode 
+            { 
+                Name = "Score", 
+                Type = DiffType.Modified, 
+                OldValue = oldVal.Score, 
+                NewValue = newVal.Score 
+            });
+        }
+        return node;
+    }
+}
+```
+
+## 6. 最佳实践
+
+1.  **保持 Element 轻量**: Element 仅用于数据传输和快照存储，避免包含复杂业务逻辑。
+2.  **正确实现 DeepClone**: 这是快照机制的基石。如果对象图复杂，考虑使用 `JsonElement<T>` 偷懒，或者手动实现以获得更高性能。
+3.  **合理命名快照**: 使用有意义的 Key（如 "BeforeUpdate", "AfterSave"）有助于调试。
