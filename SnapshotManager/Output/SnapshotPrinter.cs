@@ -121,9 +121,11 @@ namespace SnapshotManager.Output
                 // PrimitiveListElement<T>
                 if (genericDef == typeof(PrimitiveListElement<>))
                 {
-                    dynamic listElem = element;
-                    sb.AppendLine($"{indent}List ({listElem.Items.Count} items):");
-                    var items = (IEnumerable)listElem.Items;
+                    var itemsProp = type.GetProperty("Items");
+                    var items = (IEnumerable)itemsProp.GetValue(element);
+                    var count = (items as ICollection)?.Count ?? 0;
+
+                    sb.AppendLine($"{indent}List ({count} items):");
                     int idx = 0;
                     foreach (var item in items)
                     {
@@ -135,9 +137,10 @@ namespace SnapshotManager.Output
                 // DictionaryElement<K, V>
                 if (genericDef == typeof(DictionaryElement<,>))
                 {
-                    dynamic dictElem = element;
-                    sb.AppendLine($"{indent}Dictionary ({dictElem.Map.Count} items):");
-                    var map = (IDictionary)dictElem.Map;
+                    var mapProp = type.GetProperty("Map");
+                    var map = (IDictionary)mapProp.GetValue(element);
+
+                    sb.AppendLine($"{indent}Dictionary ({map.Count} items):");
                     foreach (DictionaryEntry entry in map)
                     {
                         sb.AppendLine($"{indent}  [{entry.Key}]: {entry.Value}");
@@ -148,8 +151,9 @@ namespace SnapshotManager.Output
                 // ValueElement<T>
                 if (genericDef == typeof(ValueElement<>))
                 {
-                    dynamic valElem = element;
-                    return $"{indent}{valElem.Value}";
+                    var valProp = type.GetProperty("Value");
+                    var val = valProp.GetValue(element);
+                    return $"{indent}{val}";
                 }
             }
 
